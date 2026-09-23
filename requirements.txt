@@ -1,0 +1,6 @@
+Flask==3.0.3
+Pillow==10.4.0
+alibabacloud_dysmsapi20170525==2.0.24
+alibabacloud_tea_openapi==0.3.10
+alibabacloud_tea_util==0.3.12
+tencentcloud-sdk-python==3.0.1180

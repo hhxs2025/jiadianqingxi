@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  jiadian:
+    build: .
+    image: jiadianqingxi:1.0
+    container_name: jiadianqingxi
+    ports:
+      - "7900:7900"
+    environment:
+      # 会话密钥，上线务必改
+      SECRET_KEY: "please-change-this-to-a-random-string"
+      # 商家后台密码
+      ADMIN_PASSWORD: "admin123"
+      # 两张照片最小间隔秒数，调试可改 5
+      PHOTO_MIN_INTERVAL: "180"
+      # 邮件通知（不需要就留空）
+      SMTP_HOST: "smtp.qq.com"
+      SMTP_PORT: "465"
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      SMTP_TO: ""
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
