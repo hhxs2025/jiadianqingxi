@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>预约下单-家电清洗服务</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --brand:#2f7cf6;--brand-dark:#1e63d8;--text:#1f2937;--muted:#8b95a7;
+    --line:#e8ecf4;--ok:#0f9d58;--err:#e5484d;--warn:#f59e0b;--radius:16px;
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    background:#f4f6fb;color:var(--text);font-size:15px;-webkit-font-smoothing:antialiased;
+    padding-bottom:96px;
+  }
+  .topbar{
+    position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#4f92ff,#2f7cf6);
+    color:#fff;padding:16px 18px 20px;border-radius:0 0 22px 22px;
+    box-shadow:0 6px 20px rgba(47,124,246,.24);
+  }
+  .topbar .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .topbar h1{font-size:18px;font-weight:600}
+  .topbar .user{font-size:12px;opacity:.9;margin-top:6px}
+  .topbar .user .eng{
+    display:inline-block;background:rgba(255,255,255,.22);padding:2px 8px;
+    border-radius:10px;margin-left:6px;font-weight:500;
+  }
+  .topbar .links{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .topbar .links a{
+    color:#fff;font-size:13px;text-decoration:none;background:rgba(255,255,255,.18);
+    padding:7px 13px;border-radius:20px;white-space:nowrap;transition:.15s;
+  }
+  .topbar .links a:hover{background:rgba(255,255,255,.3)}
+  .topbar .links a.mini{
+    padding:7px 10px;font-size:12.5px;background:rgba(255,255,255,.12);
+  }
+
+  .wrap{max-width:640px;margin:0 auto;padding:16px 14px 0}
+  .card{
+    background:#fff;border-radius:var(--radius);padding:18px 16px;margin-bottom:14px;
+    box-shadow:0 4px 16px rgba(23,43,77,.06);
+  }
+  .card-title{
+    display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;margin-bottom:14px;
+  }
+  .card-title::before{
+    content:'';width:3px;height:15px;border-radius:2px;background:var(--brand);
+  }
+  .card-title .sub{font-size:12px;color:var(--muted);font-weight:400;margin-left:auto}
+
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .seg button{
+    height:52px;border:1.5px solid var(--line);background:#fafbfe;border-radius:12px;
+    font-size:15px;font-family:inherit;color:#4b5563;cursor:pointer;transition:.18s;
+    display:flex;align-items:center;justify-content:center;gap:7px;font-weight:500;
+  }
+  .seg button .ico{font-size:18px}
+  .seg button.active{
+    border-color:var(--brand);background:#eef4ff;color:var(--brand-dark);
+    box-shadow:0 0 0 3px rgba(47,124,246,.1);font-weight:600;
+  }
+
+  .slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .slots button{
+    height:46px;border:1.5px solid var(--line);background:#fafbfe;border-radius:12px;
+    font-size:13.5px;font-family:inherit;color:#4b5563;cursor:pointer;transition:.18s;
+    font-weight:500;padding:0 4px;
+  }
+  .slots button.active{
+    border-color:var(--brand);background:#eef4ff;color:var(--brand-dark);
+    box-shadow:0 0 0 3px rgba(47,124,246,.1);font-weight:600;
+  }
+
+  .field{margin-bottom:16px}
+  .field:last-child{margin-bottom:0}
+  .field > label{
+    display:block;font-size:13px;font-weight:500;color:#4b5563;margin-bottom:8px;
+  }
+  .field > label .req{color:var(--err);margin-left:2px}
+  .field > label .opt{color:var(--muted);font-weight:400;font-size:12px;margin-left:4px}
+  .ctrl{
+    display:flex;align-items:center;background:#f6f8fc;border:1.5px solid transparent;
+    border-radius:12px;padding:0 14px;min-height:50px;transition:.18s;
+  }
+  .ctrl:focus-within{background:#fff;border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,124,246,.12)}
+  .ctrl input,.ctrl select,.ctrl textarea{
+    flex:1;border:0;background:transparent;outline:none;font-size:16px;color:var(--text);
+    font-family:inherit;min-width:0;width:100%;
+  }
+  .ctrl textarea{resize:none;padding:14px 0;line-height:1.55;font-size:15px;min-height:80px}
+  .ctrl select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:22px}
+  .ctrl input::placeholder,.ctrl textarea::placeholder{color:#b6bfcd;font-size:14px}
+  .ctrl.is-select{position:relative}
+  .ctrl.is-select::after{
+    content:'';position:absolute;right:16px;top:50%;width:8px;height:8px;
+    border-right:2px solid #9aa5b6;border-bottom:2px solid #9aa5b6;
+    transform:translateY(-70%) rotate(45deg);pointer-events:none;
+  }
+  .ctrl.is-textarea{align-items:flex-start;padding:0 14px}
+  .hint{font-size:12px;color:var(--muted);margin-top:7px;line-height:1.5}
+
+  .terms-box{
+    background:#fffaf0;border:1px solid #ffe4b8;border-radius:12px;padding:14px;
+    font-size:13px;line-height:1.75;color:#7a5a1e;
+  }
+  .terms-box b{color:#b45309}
+  .terms-link{
+    display:inline-block;margin-top:10px;color:var(--brand);font-size:13px;
+    text-decoration:none;font-weight:500;cursor:pointer;
+  }
+  .agree{
+    display:flex;align-items:flex-start;gap:10px;margin-top:14px;cursor:pointer;
+    font-size:13.5px;line-height:1.6;color:#374151;user-select:none;
+  }
+  .agree input{
+    appearance:none;-webkit-appearance:none;width:20px;height:20px;flex:0 0 20px;
+    border:1.5px solid #cbd5e1;border-radius:6px;background:#fff;margin-top:1px;
+    cursor:pointer;position:relative;transition:.15s;
+  }
+  .agree input:checked{background:var(--brand);border-color:var(--brand)}
+  .agree input:checked::after{
+    content:'';position:absolute;left:6px;top:2px;width:5px;height:10px;
+    border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(42deg);
+  }
+
+  .sign-block{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line)}
+  .sign-head{
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:13px;color:#4b5563;font-weight:500;margin-bottom:8px;
+  }
+  .sign-head .req{color:var(--err);margin-left:2px}
+  .sign-head .actions{display:flex;gap:10px}
+  .sign-head button{
+    border:0;background:transparent;color:var(--brand);font-size:12.5px;
+    font-family:inherit;cursor:pointer;padding:3px 0;font-weight:500;
+  }
+  .sign-head button:disabled{color:#c3cddb;cursor:not-allowed}
+  .sign-head .status-ok{color:var(--ok);font-weight:500;font-size:12.5px}
+  .sign-wrap{
+    position:relative;border:1.5px dashed #cfd9e8;border-radius:12px;
+    background:#fafbfe;overflow:hidden;height:180px;transition:.18s;
+  }
+  .sign-wrap.signed{border-color:#c7e6d4;border-style:solid;background:#fff}
+  .sign-wrap canvas{
+    width:100%;height:100%;display:block;touch-action:none;cursor:crosshair;
+  }
+  .sign-wrap .sign-ph{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;color:#b6bfcd;font-size:13.5px;
+    pointer-events:none;line-height:1.8;text-align:center;
+  }
+  .sign-wrap.has-ink .sign-ph{display:none}
+  .sign-hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+
+  .photo-tip{
+    font-size:12.5px;color:#7a5a1e;background:#fffaf0;border:1px solid #ffe4b8;
+    border-radius:10px;padding:10px 12px;line-height:1.65;margin-bottom:14px;
+  }
+  .photo-tip b{color:#b45309}
+  .photos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .slot{
+    position:relative;aspect-ratio:1/1;border-radius:14px;overflow:hidden;
+    border:1.5px dashed #cfd9e8;background:#fafbfe;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:.18s;
+  }
+  .slot:active{transform:scale(.985)}
+  .slot.done{border-style:solid;border-color:#c7e6d4;background:#fff}
+  .slot.locked{border-color:#e5e9f0;background:#f4f6fa;cursor:not-allowed}
+  .slot .ph-empty{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    color:#93a0b3;font-size:13px;text-align:center;padding:8px;
+  }
+  .slot .ph-empty .plus{
+    width:40px;height:40px;border-radius:50%;background:#eef3fb;color:var(--brand);
+    font-size:22px;line-height:40px;text-align:center;font-weight:300;
+  }
+  .slot .ph-empty em{font-style:normal;font-size:11.5px;color:#aab5c5}
+  .slot img{width:100%;height:100%;object-fit:cover;display:block}
+  .slot .stamp{
+    position:absolute;left:0;right:0;bottom:0;padding:6px 9px;
+    background:linear-gradient(transparent,rgba(0,0,0,.72));color:#fff;
+    font-size:11.5px;letter-spacing:.2px;
+  }
+  .slot .lock-mask{
+    position:absolute;inset:0;background:rgba(244,246,250,.92);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:6px;color:#8b95a7;font-size:13px;text-align:center;padding:10px;
+  }
+  .slot .lock-mask .cd{
+    font-size:22px;font-weight:700;color:var(--brand);font-variant-numeric:tabular-nums;
+  }
+  .photo-actions{display:flex;align-items:center;gap:12px;margin-top:12px}
+  .photo-status{font-size:12.5px;color:var(--muted);flex:1;line-height:1.5}
+  .photo-status.ok{color:var(--ok);font-weight:500}
+  .link-btn{
+    border:0;background:transparent;color:var(--brand);font-size:13px;font-family:inherit;
+    cursor:pointer;padding:6px 2px;font-weight:500;
+  }
+  .link-btn:disabled{color:#c3cddb;cursor:not-allowed}
+
+  .footer{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.96);
+    backdrop-filter:blur(10px);border-top:1px solid var(--line);
+    padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  }
+  .footer-inner{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px}
+  .price{font-size:12px;color:var(--muted);line-height:1.5}
+  .price b{display:block;font-size:16px;color:var(--err);font-weight:600}
+  .btn-submit{
+    flex:1;height:50px;border:0;border-radius:12px;font-size:16px;font-weight:600;
+    font-family:inherit;cursor:pointer;color:#fff;
+    background:linear-gradient(135deg,#4f92ff,#2f7cf6);
+    box-shadow:0 6px 18px rgba(47,124,246,.3);transition:.18s;
+  }
+  .btn-submit:disabled{background:#c3d3ea;box-shadow:none;cursor:not-allowed}
+
+  .modal[hidden]{display:none}
+  .modal{position:fixed;inset:0;z-index:100;display:flex;align-items:flex-end}
+  .modal-mask{position:absolute;inset:0;background:rgba(15,23,42,.5)}
+  .modal-body{
+    position:relative;width:100%;max-width:640px;margin:0 auto;background:#fff;
+    border-radius:20px 20px 0 0;max-height:82vh;display:flex;flex-direction:column;
+    animation:up .24s ease;
+  }
+  @keyframes up{from{transform:translateY(28px);opacity:.6}to{transform:none;opacity:1}}
+  .modal-head{padding:18px 18px 12px;border-bottom:1px solid var(--line)}
+  .modal-head h3{font-size:16px;font-weight:600}
+  .modal-content{padding:16px 18px;overflow-y:auto;font-size:13.5px;line-height:1.85;color:#374151}
+  .modal-content h4{font-size:13.5px;color:#b45309;margin:16px 0 6px}
+  .modal-content h4:first-child{margin-top:0}
+  .modal-content p{margin-bottom:10px}
+  .modal-content .promise{
+    background:#fef3f3;border:1px solid #fbd5d5;border-radius:10px;padding:12px 14px;
+    color:#7f1d1d;font-weight:500;line-height:1.85;
+  }
+  .modal-content ol{padding-left:19px;margin-bottom:8px}
+  .modal-content li{margin-bottom:5px}
+  .modal-foot{padding:12px 18px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+  .modal-foot button{
+    width:100%;height:48px;border:0;border-radius:12px;font-size:15.5px;font-weight:600;
+    font-family:inherit;color:#fff;background:linear-gradient(135deg,#4f92ff,#2f7cf6);cursor:pointer;
+  }
+
+  .toast{
+    position:fixed;left:50%;bottom:118px;transform:translate(-50%,12px);z-index:200;
+    background:rgba(31,41,55,.93);color:#fff;font-size:13.5px;padding:11px 18px;
+    border-radius:22px;max-width:86vw;text-align:center;line-height:1.5;
+    opacity:0;pointer-events:none;transition:.24s;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width: 420px) {
+    .slots{grid-template-columns:1fr 1fr}
+    .slots button{font-size:13px;height:44px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>预约上门服务</h1>
+    <div class="links">
+      <a href="/orders">我的预约</a>
+      <a href="/admin/login" class="mini" title="商家后台">🛠 商家</a>
+    </div>
+  </div>
+  <div class="user">
+    当前账号：{{ user.phone or user.nickname or '微信用户' }}
+    {% if engineer_name %}
+    <span class="eng">服务师傅：{{ engineer_name }}</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="card">
+    <div class="card-title">服务类型</div>
+    <div class="seg" id="segService">
+      {% for st in service_types %}
+      <button type="button" data-val="{{ st }}" class="{{ 'active' if loop.first else '' }}">
+        <span class="ico">{{ '🧺' if st == '家电清洗' else '🚿' }}</span>{{ st }}
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">预约信息</div>
+
+    <div class="field" id="objectField">
+      <label for="cleanObject">清洗对象<span class="req">*</span></label>
+      <div class="ctrl is-select">
+        <select id="cleanObject">
+          <option value="">请选择清洗对象</option>
+          {% for obj in clean_objects %}
+          <option value="{{ obj }}">{{ obj }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="bookDate">预约日期<span class="req">*</span></label>
+      <div class="ctrl">
+        <input id="bookDate" type="date" min="{{ today }}">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>期望时段<span class="req">*</span></label>
+      <div class="slots" id="slotPicker">
+        {% for s in time_slots %}
+        <button type="button" data-val="{{ s }}">{{ s }}</button>
+        {% endfor %}
+      </div>
+      <div class="hint">师傅会在该时段内电话联系您确认具体上门时间</div>
+    </div>
+
+    <div class="field">
+      <label for="address">服务地址<span class="req">*</span></label>
+      <div class="ctrl is-textarea">
+        <textarea id="address" maxlength="120" rows="2"
+          placeholder="请输入清洗服务地点，精确到单元、房号，例如：武昌区中南路 8 号 3 栋 2 单元 1502"></textarea>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="contactPhone">联系电话<span class="req">*</span></label>
+      <div class="ctrl">
+        <input id="contactPhone" type="tel" inputmode="numeric" maxlength="11"
+               autocomplete="tel" placeholder="请输入你的电话号码"
+               value="{{ user.phone or '' }}">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="remark">备注<span class="opt">（选填）</span></label>
+      <div class="ctrl is-textarea">
+        <textarea id="remark" maxlength="200" rows="3"
+          placeholder="请输入电器品牌与型号，例如：方太 EMD20T 油烟机，2019 年购买"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">预约必阅<span class="sub">服务条款</span></div>
+
+    <div class="terms-box">
+      <b>核心承诺：</b><br>
+      本人承诺不为存在暗病、故障的家电设备预约清洗服务，如确需预约清洗，
+      清洗服务结束后，被清洗设备出现的一切故障、问题与负责清洗的工程师无关，
+      相关维修责任及费用由本人自行承担。
+      <div><span class="terms-link" id="openTerms">查看完整服务条款 ›</span></div>
+    </div>
+
+    <label class="agree" for="agreeBox">
+      <input type="checkbox" id="agreeBox">
+      <span>我已阅读并同意《预约必阅（服务条款）》，并确认所填机器信息真实、机器可正常运行。</span>
+    </label>
+
+    <div class="sign-block">
+      <div class="sign-head">
+        <span>手写签名<span class="req">*</span></span>
+        <span class="actions">
+          <span class="status-ok" id="signStatus" hidden>✓ 已签名</span>
+          <button type="button" id="clearSign" disabled>清空重签</button>
+        </span>
+      </div>
+      <div class="sign-wrap" id="signWrap">
+        <canvas id="signCanvas"></canvas>
+        <div class="sign-ph">请在此处手写签名<br><span style="font-size:11.5px;">手指或鼠标书写，签完后可提交</span></div>
+      </div>
+      <div class="sign-hint">签名将作为您同意上述服务条款的凭证，随订单一并保存。</div>
+    </div>
+  </div>
+
+  <div class="card" id="photoCard">
+    <div class="card-title">
+      附件提交
+      <span class="sub" id="photoCount">0 / 2</span>
+    </div>
+
+    <div class="photo-tip">
+      请上传 <b>两张</b> 机器正常运行的照片，两张照片的<b>拍摄时间需间隔 3 分钟以上</b>，
+      用于确认机器在等待期间持续正常运行、不存在暗病。<br>
+      操作方式：先拍第 1 张 → 等待倒计时结束 → 再拍第 2 张。
+    </div>
+
+    <div class="photos">
+      <div class="slot" id="slot0" data-index="0">
+        <div class="ph-empty">
+          <span class="plus">＋</span>
+          <span>上传第 1 张</span>
+          <em>机器运行状态</em>
+        </div>
+        <img alt="第 1 张照片" hidden>
+        <div class="stamp" hidden></div>
+      </div>
+      <div class="slot" id="slot1" data-index="1">
+        <div class="ph-empty">
+          <span class="plus">＋</span>
+          <span>上传第 2 张</span>
+          <em>间隔 3 分钟后拍摄</em>
+        </div>
+        <img alt="第 2 张照片" hidden>
+        <div class="stamp" hidden></div>
+      </div>
+    </div>
+
+    <div class="photo-actions">
+      <div class="photo-status" id="photoStatus">尚未上传照片</div>
+      <button class="link-btn" id="resetPhoto" type="button" disabled>重新上传</button>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" hidden>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-inner">
+    <div class="price">
+      预约服务
+      <b>免费上门</b>
+    </div>
+    <button class="btn-submit" id="submitBtn" type="button">提交预约</button>
+  </div>
+</div>
+
+<div class="modal" id="termsModal" hidden>
+  <div class="modal-mask" id="termsMask"></div>
+  <div class="modal-body">
+    <div class="modal-head"><h3>预约必阅（服务条款）</h3></div>
+    <div class="modal-content">
+
+      <h4>一、核心承诺</h4>
+      <div class="promise">
+        本人承诺不为存在暗病、故障的家电设备预约清洗服务。如确需预约清洗，
+        清洗服务结束后，被清洗设备出现的一切故障、问题与负责清洗的工程师无关，
+        相关维修责任及费用由本人自行承担。
+      </div>
+
+      <h4>二、关于电器暗病与既有故障</h4>
+      <ol>
+        <li>本服务为<b>清洗保养服务</b>，不含维修。师傅上门后仅对约定部位进行清洗。</li>
+        <li>下列情形均属于应如实告知的暗病或故障：异响、剧烈抖动、漏水、漏电、跳闸、
+            异味、不制冷/不制热、不脱水、点火异常、显示屏报错、曾私自拆修、
+            已超保修期、进水或受潮等。</li>
+        <li>若机器本身存在上述暗病或故障，清洗过程中的震动、拆卸、水路/电路复位等操作，
+            可能使原有问题提前显现或加重。此种情形下产生的维修需求及费用，
+            由用户按上述核心承诺自行承担。</li>
+        <li>因机器自身老化、配件失效、非原厂改装等固有原因导致的损坏，
+            服务方不承担赔偿责任，可按成本价协助维修。</li>
+      </ol>
+
+      <h4>三、服务前确认</h4>
+      <ol>
+        <li>双方应在清洗前共同确认机器运行状态，并由用户上传<b>两张间隔 3 分钟以上</b>的
+            正常运行照片作为凭证，同时手写签名确认同意本条款。</li>
+        <li>照片须为清洗前真实拍摄，签名须为本人手写。若照片、签名与实际不符，
+            服务方有权终止服务，已产生的上门费用不予退还。</li>
+        <li>若机器在清洗前已无法正常开机运行，服务方有权拒绝提供服务。</li>
+      </ol>
+
+      <h4>四、服务范围与责任</h4>
+      <ol>
+        <li>服务仅针对预约时选择的清洗对象与部位，不含内部管路改造、加氟、换件等。</li>
+        <li>清洗过程中因用户提供的机器信息不实（品牌、型号、年限等）造成的损失，
+            由用户承担。</li>
+        <li>贵重、精密、进口或已停产的电器，建议用户提前告知并确认是否适合拆洗。</li>
+        <li>清洗完成后请当场验收，验收单签字后视为本次服务完成。</li>
+      </ol>
+
+      <h4>五、其他</h4>
+      <ol>
+        <li>预约时间可能因天气、交通、前序工单等客观原因顺延，服务方会提前电话沟通。</li>
+        <li>如需改约或取消，请提前 2 小时联系客服。</li>
+        <li>本条款为预约前置条件，勾选并手写签名即视为已阅读、理解并同意全部内容。</li>
+      </ol>
+
+    </div>
+    <div class="modal-foot">
+      <button id="agreeBtn" type="button">我已阅读并同意</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  const MIN_INTERVAL = {{ min_interval }};
+
+  const $ = id => document.getElementById(id);
+  const segService   = $('segService');
+  const objectField  = $('objectField');
+  const cleanObject  = $('cleanObject');
+  const bookDate     = $('bookDate');
+  const slotPicker   = $('slotPicker');
+  const addressEl    = $('address');
+  const phoneEl      = $('contactPhone');
+  const remarkEl     = $('remark');
+  const agreeBox     = $('agreeBox');
+  const submitBtn    = $('submitBtn');
+  const fileInput    = $('fileInput');
+  const photoStatus  = $('photoStatus');
+  const photoCount   = $('photoCount');
+  const resetPhoto   = $('resetPhoto');
+  const toastEl      = $('toast');
+  const signWrap     = $('signWrap');
+  const signCanvas   = $('signCanvas');
+  const clearSignBtn = $('clearSign');
+  const signStatus   = $('signStatus');
+
+  let serviceType = '{{ service_types[0] }}';
+  let timeSlot = '';
+  let photos = [];
+  let remain = 0;
+  let tickTimer = null;
+  let uploading = false;
+
+  let toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
+  }
+
+  async function api(url, options) {
+    const opt = Object.assign({ method: 'POST' }, options || {});
+    const res = await fetch(url, opt);
+    if (res.status === 401) {
+      location.href = '/login';
+      throw new Error('未登录');
+    }
+    return res.json();
+  }
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function fmtTime(ts) {
+    const d = new Date(ts * 1000);
+    return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+
+  /* v1.0.3: 照片卡片的显示/隐藏 */
+  function updatePhotoCardVisibility() {
+    const card = document.getElementById('photoCard');
+    if (!card) return;
+    card.style.display = (serviceType === '家电清洗') ? '' : 'none';
+  }
+
+  /* ============ 图片压缩 ============ */
+  function compressImage(file, maxSize, quality) {
+    maxSize = maxSize || 1280;
+    quality = quality || 0.82;
+
+    return new Promise(function (resolve, reject) {
+      if (file.size < 300 * 1024 && /jpe?g$/i.test(file.type)) {
+        return resolve(file);
+      }
+
+      const reader = new FileReader();
+      reader.onerror = function () { reject(new Error('读取文件失败')); };
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onerror = function () { reject(new Error('图片解析失败')); };
+        img.onload = function () {
+          let w = img.naturalWidth;
+          let h = img.naturalHeight;
+
+          if (w > maxSize || h > maxSize) {
+            if (w >= h) {
+              h = Math.round(h * maxSize / w);
+              w = maxSize;
+            } else {
+              w = Math.round(w * maxSize / h);
+              h = maxSize;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+
+          canvas.toBlob(function (blob) {
+            if (!blob) {
+              return reject(new Error('压缩失败'));
+            }
+            if (blob.size >= file.size) {
+              return resolve(file);
+            }
+            const newName = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+            const out = new File([blob], newName, {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            });
+            resolve(out);
+          }, 'image/jpeg', quality);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ============ 服务类型 ============ */
+  segService.addEventListener('click', function (e) {
+    const btn = e.target.closest('button[data-val]');
+    if (!btn) return;
+    [].forEach.call(segService.children, b => b.classList.remove('active'));
+    btn.classList.add('active');
+    serviceType = btn.dataset.val;
+    const isClean = serviceType === '家电清洗';
+    objectField.style.display = isClean ? '' : 'none';
+    if (!isClean) cleanObject.value = '';
+
+    // v1.0.3: 切到管道疏通时，隐藏照片区并清掉已上传的照片
+    if (!isClean && photos.length > 0) {
+      api('/api/reset_photos', { method: 'POST' }).catch(function(){});
+      photos = [];
+      remain = 0;
+      clearInterval(tickTimer);
+      renderPhotos();
+    }
+    updatePhotoCardVisibility();
+  });
+
+  (function initService() {
+    const first = segService.querySelector('button[data-val]');
+    if (first) {
+      serviceType = first.dataset.val;
+      first.classList.add('active');
+    }
+    objectField.style.display = serviceType === '家电清洗' ? '' : 'none';
+    updatePhotoCardVisibility();
+  })();
+
+  /* ============ 时段选择 ============ */
+  slotPicker.addEventListener('click', function (e) {
+    const btn = e.target.closest('button[data-val]');
+    if (!btn) return;
+    const isActive = btn.classList.contains('active');
+    [].forEach.call(slotPicker.children, b => b.classList.remove('active'));
+    if (isActive) {
+      timeSlot = '';
+    } else {
+      btn.classList.add('active');
+      timeSlot = btn.dataset.val;
+    }
+  });
+
+  /* ============ 服务条款 ============ */
+  const termsModal = $('termsModal');
+  $('openTerms').addEventListener('click', () => { termsModal.hidden = false; });
+  $('termsMask').addEventListener('click', () => { termsModal.hidden = true; });
+  $('agreeBtn').addEventListener('click', () => {
+    agreeBox.checked = true;
+    termsModal.hidden = true;
+    document.querySelector('.sign-block')
+      .scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  /* ============ 手写签名 ============ */
+  const ctx = signCanvas.getContext('2d');
+  let drawing = false;
+  let hasInk = false;
+  let dpr = 1;
+
+  function setupCanvas() {
+    const rect = signCanvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    dpr = window.devicePixelRatio || 1;
+    signCanvas.width  = Math.round(rect.width  * dpr);
+    signCanvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    ctx.strokeStyle = '#1f2937';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.clearRect(0, 0, rect.width, rect.height);
+  }
+
+  function getPoint(e) {
+    const rect = signCanvas.getBoundingClientRect();
+    const t = (e.touches && e.touches[0]) || e;
+    return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+  }
+
+  function beginStroke(e) {
+    e.preventDefault();
+    drawing = true;
+    const p = getPoint(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  }
+
+  function moveStroke(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = getPoint(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    if (!hasInk) {
+      hasInk = true;
+      signWrap.classList.add('has-ink', 'signed');
+      clearSignBtn.disabled = false;
+      signStatus.hidden = true;
+    }
+  }
+
+  function endStroke() {
+    if (!drawing) return;
+    drawing = false;
+    try { ctx.closePath(); } catch (err) {}
+  }
+
+  signCanvas.addEventListener('mousedown', beginStroke);
+  signCanvas.addEventListener('mousemove', moveStroke);
+  signCanvas.addEventListener('mouseup', endStroke);
+  signCanvas.addEventListener('mouseleave', endStroke);
+  signCanvas.addEventListener('touchstart', beginStroke, { passive: false });
+  signCanvas.addEventListener('touchmove', moveStroke, { passive: false });
+  signCanvas.addEventListener('touchend', endStroke);
+  signCanvas.addEventListener('touchcancel', endStroke);
+
+  function canvasIsBlank() {
+    const w = signCanvas.width, h = signCanvas.height;
+    if (!w || !h) return true;
+    const data = ctx.getImageData(0, 0, w, h).data;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] !== 0) return false;
+    }
+    return true;
+  }
+
+  function exportSign() {
+    if (canvasIsBlank()) return null;
+    return signCanvas.toDataURL('image/png');
+  }
+
+  function resetSign() {
+    const rect = signCanvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    hasInk = false;
+    signWrap.classList.remove('has-ink', 'signed');
+    clearSignBtn.disabled = true;
+    signStatus.hidden = true;
+  }
+
+  clearSignBtn.addEventListener('click', function () {
+    resetSign();
+    toast('已清空，请重新手写签名');
+  });
+
+  let resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (!hasInk) { clearTimeout(resizeTimer); resizeTimer = setTimeout(setupCanvas, 180); }
+  });
+
+  window.addEventListener('load', setupCanvas);
+  if (document.readyState === 'complete') setupCanvas();
+  setTimeout(setupCanvas, 50);
+
+  /* ============ 照片 ============ */
+  function renderPhotos() {
+    const slots = [$('slot0'), $('slot1')];
+    const locked = photos.length === 1 && remain > 0;
+
+    slots.forEach(function (slot, i) {
+      const img   = slot.querySelector('img');
+      const stamp = slot.querySelector('.stamp');
+      const empty = slot.querySelector('.ph-empty');
+      const oldMask = slot.querySelector('.lock-mask');
+      if (oldMask) oldMask.remove();
+
+      slot.classList.remove('locked', 'done');
+
+      if (photos[i]) {
+        img.src = photos[i].url;
+        img.hidden = false;
+        empty.style.display = 'none';
+        stamp.hidden = false;
+        stamp.textContent = '拍摄于 ' + fmtTime(photos[i].ts);
+        slot.classList.add('done');
+      } else {
+        img.hidden = true;
+        img.removeAttribute('src');
+        empty.style.display = '';
+        stamp.hidden = true;
+      }
+    });
+
+    if (locked) {
+      const slot1 = slots[1];
+      slot1.classList.add('locked');
+      const mask = document.createElement('div');
+      mask.className = 'lock-mask';
+      mask.innerHTML = '<div class="cd">' + remain + 's</div>' +
+                       '<div>请等待倒计时结束后<br>再拍第 2 张</div>';
+      slot1.appendChild(mask);
+    }
+
+    photoCount.textContent = photos.length + ' / 2';
+    resetPhoto.disabled = photos.length === 0;
+
+    photoStatus.className = 'photo-status';
+    if (photos.length === 0) {
+      photoStatus.textContent = '尚未上传照片';
+    } else if (photos.length === 1) {
+      if (remain > 0) {
+        photoStatus.textContent = '第 1 张已上传，请等待 ' + remain + ' 秒后拍摄第 2 张';
+      } else {
+        photoStatus.className = 'photo-status ok';
+        photoStatus.textContent = '间隔已满足，请拍摄第 2 张';
+      }
+    } else {
+      const gap = Math.round(photos[1].ts - photos[0].ts);
+      const m = Math.floor(gap / 60), s = gap % 60;
+      photoStatus.className = 'photo-status ok';
+      photoStatus.textContent = '两张照片已就绪，时间跨度 ' + m + ' 分 ' + s + ' 秒';
+    }
+  }
+
+  function startTick() {
+    clearInterval(tickTimer);
+    if (remain <= 0) return;
+    tickTimer = setInterval(function () {
+      remain--;
+      if (remain <= 0) {
+        clearInterval(tickTimer);
+        remain = 0;
+        refreshPhotoState();
+        return;
+      }
+      renderPhotos();
+    }, 1000);
+  }
+
+  async function refreshPhotoState() {
+    try {
+      const d = await api('/api/photo_state', { method: 'GET' });
+      if (!d.ok) return;
+      photos = (d.photos || []).map(p => ({ url: p.url, ts: p.ts }));
+      remain = d.remain || 0;
+      renderPhotos();
+      startTick();
+    } catch (e) { /* 忽略 */ }
+  }
+
+  document.querySelectorAll('.slot').forEach(function (slot) {
+    slot.addEventListener('click', function () {
+      const i = Number(slot.dataset.index);
+      if (uploading) return;
+      if (photos[i]) { toast('该位置已有照片，如需更换请点击「重新上传」'); return; }
+      if (i === 1 && (photos.length < 1 || remain > 0)) {
+        if (photos.length < 1) toast('请先上传第 1 张照片');
+        else toast('请再等待 ' + remain + ' 秒后拍摄第 2 张');
+        return;
+      }
+      fileInput.value = '';
+      fileInput.click();
+    });
+  });
+
+  fileInput.addEventListener('change', async function () {
+    const file = this.files && this.files[0];
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { toast('请选择图片文件'); return; }
+
+    uploading = true;
+    photoStatus.className = 'photo-status';
+    photoStatus.textContent = '处理中…';
+
+    let toUpload = file;
+    try {
+      toUpload = await compressImage(file);
+    } catch (err) {
+      toast('图片处理失败，使用原图');
+      toUpload = file;
+    }
+
+    if (toUpload.size > 8 * 1024 * 1024) {
+      toast('压缩后仍超过 8MB，请换一张照片');
+      uploading = false;
+      renderPhotos();
+      return;
+    }
+
+    photoStatus.textContent = '上传中…';
+    const fd = new FormData();
+    fd.append('photo', toUpload);
+
+    try {
+      const d = await api('/api/upload_photo', { method: 'POST', body: fd });
+      if (!d.ok) {
+        toast(d.msg || '上传失败');
+        if (typeof d.remain === 'number' && d.remain > 0) {
+          remain = d.remain;
+          startTick();
+        }
+        renderPhotos();
+        return;
+      }
+      await refreshPhotoState();
+      if (photos.length === 2) toast('两张照片已上传完成');
+      else toast('第 1 张上传成功，请等待 ' + remain + ' 秒');
+    } catch (e) {
+      toast('上传失败，请重试');
+      renderPhotos();
+    } finally {
+      uploading = false;
+    }
+  });
+
+  resetPhoto.addEventListener('click', async function () {
+    if (!confirm('确定要清空已上传的照片并重新上传吗？')) return;
+    try {
+      const d = await api('/api/reset_photos');
+      if (d.ok) {
+        photos = []; remain = 0;
+        clearInterval(tickTimer);
+        renderPhotos();
+        toast('已清空，请重新拍摄第 1 张');
+      }
+    } catch (e) { toast('操作失败，请重试'); }
+  });
+
+  /* ============ 提交 ============ */
+  submitBtn.addEventListener('click', async function () {
+    if (serviceType === '家电清洗' && !cleanObject.value) {
+      toast('请选择清洗对象'); return;
+    }
+    if (!bookDate.value) { toast('请选择预约日期'); return; }
+    if (bookDate.value < '{{ today }}') { toast('预约日期不能早于今天'); return; }
+    if (!timeSlot) { toast('请选择期望时段'); return; }
+
+    const address = addressEl.value.trim();
+    if (address.length < 5) { toast('请填写详细地址，精确到单元、房号'); return; }
+    if (address.length > 120) { toast('地址过长，请精简后重试'); return; }
+
+    const phone = phoneEl.value.trim();
+    if (!/^1[3-9]\d{9}$/.test(phone)) { toast('请填写正确的联系电话'); return; }
+
+    if (!agreeBox.checked) {
+      toast('请先阅读并勾选《预约必阅（服务条款）》');
+      termsModal.hidden = false;
+      return;
+    }
+
+    const signDataUrl = exportSign();
+    if (!signDataUrl) {
+      toast('请在《预约必阅》处手写签名');
+      document.querySelector('.sign-block')
+        .scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    // v1.0.3: 只有家电清洗才校验照片
+    if (serviceType === '家电清洗') {
+      if (photos.length !== 2) { toast('请上传两张机器正常运行的照片'); return; }
+      if (remain > 0) { toast('两张照片间隔不足，请再等待 ' + remain + ' 秒'); return; }
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '提交中…';
+
+    try {
+      const signRes = await api('/api/upload_signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: signDataUrl })
+      });
+      if (!signRes.ok) {
+        toast(signRes.msg || '签名上传失败');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '提交预约';
+        return;
+      }
+      signStatus.hidden = false;
+
+      const d = await api('/api/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_type: serviceType,
+          clean_object: serviceType === '家电清洗' ? cleanObject.value : '',
+          time_slot: timeSlot,
+          book_date: bookDate.value,
+          address: address,
+          contact_phone: phone,
+          remark: remarkEl.value.trim(),
+          agreed: agreeBox.checked
+        })
+      });
+
+      if (d.ok) {
+        toast('预约提交成功');
+        setTimeout(function () {
+          location.href = '/orders?new=' + encodeURIComponent(d.order_no);
+        }, 700);
+      } else {
+        toast(d.msg || '提交失败，请检查后重试');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '提交预约';
+        if (d.msg && d.msg.indexOf('间隔') > -1) refreshPhotoState();
+      }
+    } catch (e) {
+      toast('网络异常，请稍后重试');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '提交预约';
+    }
+  });
+
+  phoneEl.addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '');
+  });
+
+  refreshPhotoState();
+})();
+</script>
+</body>
+</html>

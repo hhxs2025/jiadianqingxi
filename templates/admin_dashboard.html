@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>数据看板-家电清洗服务</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#2f7cf6;--text:#1f2937;--muted:#8b95a7;--line:#e8ecf4;
+    --ok:#0f9d58;--warn:#f59e0b;--err:#e5484d;--purple:#7c3aed;
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    background:#f4f6fb;color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;
+    padding-bottom:40px;
+  }
+  .topbar{
+    position:sticky;top:0;z-index:20;background:#1e3a5f;color:#fff;
+    padding:14px 18px;box-shadow:0 4px 16px rgba(0,0,0,.18);
+  }
+  .topbar .row{display:flex;align-items:center;gap:14px;max-width:1180px;margin:0 auto}
+  .topbar h1{font-size:16px;font-weight:600;flex:1}
+  .topbar a,.topbar button{
+    color:#fff;font-size:13px;text-decoration:none;background:rgba(255,255,255,.16);
+    padding:7px 13px;border-radius:8px;border:0;font-family:inherit;cursor:pointer;
+  }
+  .topbar button:hover,.topbar a:hover{background:rgba(255,255,255,.26)}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 0}
+
+  .range-row{
+    display:flex;gap:8px;margin-bottom:16px;
+  }
+  .range-row button{
+    border:1.5px solid var(--line);background:#fff;color:#4b5563;
+    font-size:13px;font-family:inherit;cursor:pointer;
+    padding:7px 16px;border-radius:20px;font-weight:500;transition:.15s;
+  }
+  .range-row button:hover{border-color:var(--brand);color:var(--brand)}
+  .range-row button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+  .stat-row{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;
+  }
+  .stat{
+    background:#fff;border-radius:12px;padding:16px 18px;
+    box-shadow:0 2px 10px rgba(23,43,77,.05);
+  }
+  .stat .lbl{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+  .stat .num{font-size:26px;font-weight:700;line-height:1.1;color:#1f2937}
+  .stat .num.brand{color:var(--brand)}
+  .stat .num.ok{color:var(--ok)}
+  .stat .num.warn{color:var(--warn)}
+  .stat .num.purple{color:var(--purple)}
+  .stat .unit{font-size:13px;color:var(--muted);font-weight:400;margin-left:3px}
+
+  .grid-2{
+    display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:16px;
+  }
+  .grid-3{
+    display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;
+  }
+
+  .card{
+    background:#fff;border-radius:14px;padding:18px;
+    box-shadow:0 2px 10px rgba(23,43,77,.05);
+  }
+  .card h2{
+    font-size:15px;font-weight:600;margin-bottom:16px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h2::before{content:'';width:3px;height:15px;border-radius:2px;background:var(--brand)}
+  .card h2 .sub{font-size:12px;color:var(--muted);font-weight:400;margin-left:auto}
+
+  .chart-wrap{position:relative;height:240px}
+
+  .rank-list{display:flex;flex-direction:column;gap:10px}
+  .rank-item{
+    display:flex;align-items:center;gap:12px;
+    padding:10px 12px;background:#f8fafd;border-radius:10px;
+  }
+  .rank-item .idx{
+    width:26px;height:26px;border-radius:50%;flex:0 0 26px;
+    background:#eef4ff;color:var(--brand);font-size:12.5px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .rank-item .idx.gold{background:#fffbeb;color:#b45309}
+  .rank-item .idx.silver{background:#f3f4f6;color:#4b5563}
+  .rank-item .idx.bronze{background:#fef3c7;color:#92400e}
+  .rank-item .name{flex:1;font-weight:500;color:#1f2937;font-size:13.5px}
+  .rank-item .count{
+    font-family:ui-monospace,Menlo,monospace;font-size:13.5px;
+    color:#6b7280;
+  }
+  .rank-item .count b{color:#1f2937;font-weight:700;font-size:15px}
+
+  .bar-wrap{
+    display:flex;align-items:center;gap:10px;margin-bottom:10px;
+  }
+  .bar-label{flex:0 0 80px;font-size:13px;color:#4b5563}
+  .bar-track{
+    flex:1;height:22px;background:#f0f3f9;border-radius:11px;overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;background:linear-gradient(90deg,#4f92ff,#2f7cf6);
+    border-radius:11px;transition:width .4s ease;
+  }
+  .bar-value{
+    flex:0 0 50px;font-family:ui-monospace,Menlo,monospace;
+    font-size:13px;color:#1f2937;text-align:right;
+  }
+
+  .empty-tip{
+    text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;
+  }
+
+  @media (max-width: 820px) {
+    .topbar{padding:12px 14px}
+    .topbar .row{flex-wrap:wrap;gap:8px}
+    .topbar h1{font-size:14px;flex:1 1 100%;order:-1}
+    .topbar a,.topbar button{font-size:12.5px;padding:6px 11px}
+    .wrap{padding:12px 12px 0}
+    .stat-row{grid-template-columns:repeat(2,1fr);gap:10px}
+    .stat .num{font-size:22px}
+    .grid-2,.grid-3{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>📊 数据看板</h1>
+    <a href="{{ url_for('admin_engineers') }}">师傅管理</a>
+    <a href="{{ url_for('admin_orders') }}">全局订单</a>
+    <a href="{{ url_for('admin_settings') }}">系统设置</a>
+    <form method="post" action="{{ url_for('admin_logout') }}" style="display:inline">
+      <button type="submit">退出</button>
+    </form>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="range-row">
+    <button data-days="7" class="on">近 7 天</button>
+    <button data-days="30">近 30 天</button>
+    <button data-days="90">近 90 天</button>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat">
+      <div class="lbl">累计订单</div>
+      <div class="num brand" id="sTotal">—</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">已完成</div>
+      <div class="num ok" id="sDone">—</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">本月订单</div>
+      <div class="num warn" id="sMonth">—</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">客户复购率</div>
+      <div class="num purple"><span id="sRepeat">—</span><span class="unit">%</span></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>订单趋势<span class="sub" id="trendSub"></span></h2>
+      <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>订单状态分布</h2>
+      <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <h2>师傅工作量排行</h2>
+      <div id="engineerList" class="rank-list">
+        <div class="empty-tip">加载中…</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>服务类型分布</h2>
+      <div id="serviceList" style="padding-top:6px;">
+        <div class="empty-tip">加载中…</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var trendChart = null;
+  var statusChart = null;
+  var currentDays = 7;
+
+  function statusColor(s) {
+    return {
+      '待接单': '#f59e0b',
+      '已接单': '#1e63d8',
+      '服务中': '#0369a1',
+      '已完成': '#0f9d58',
+      '已取消': '#9ca3af'
+    }[s] || '#cbd5e1';
+  }
+
+  async function loadData(days) {
+    currentDays = days;
+    try {
+      var res = await fetch('/admin/api/dashboard_data?days=' + days);
+      var d = await res.json();
+      if (!d.ok) return;
+
+      // 顶部统计
+      document.getElementById('sTotal').textContent = d.total_orders;
+      document.getElementById('sDone').textContent = d.done_orders;
+      document.getElementById('sMonth').textContent = d.month_orders;
+      document.getElementById('sRepeat').textContent = d.repeat_rate;
+
+      // 趋势图
+      var dates = d.daily.map(function (x) { return x.date.slice(5); });
+      var counts = d.daily.map(function (x) { return x.count; });
+      document.getElementById('trendSub').textContent = '共 ' + days + ' 天';
+
+      if (trendChart) trendChart.destroy();
+      trendChart = new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: '订单数',
+            data: counts,
+            borderColor: '#2f7cf6',
+            backgroundColor: 'rgba(47,124,246,.1)',
+            fill: true,
+            tension: .35,
+            pointRadius: 3,
+            pointBackgroundColor: '#2f7cf6',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1, precision: 0, font: { size: 11 } },
+              grid: { color: '#f0f3f9' }
+            },
+            x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+          }
+        }
+      });
+
+      // 状态饼图
+      var statusLabels = Object.keys(d.status_counts);
+      var statusData = statusLabels.map(function (k) { return d.status_counts[k]; });
+      var statusColors = statusLabels.map(statusColor);
+
+      if (statusChart) statusChart.destroy();
+      statusChart = new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+          labels: statusLabels,
+          datasets: [{
+            data: statusData,
+            backgroundColor: statusColors,
+            borderWidth: 0,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '62%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { font: { size: 12 }, boxWidth: 12, padding: 8 }
+            }
+          }
+        }
+      });
+
+      // 师傅排行
+      var engEl = document.getElementById('engineerList');
+      if (!d.engineers.length) {
+        engEl.innerHTML = '<div class="empty-tip">暂无数据</div>';
+      } else {
+        engEl.innerHTML = d.engineers.map(function (e, i) {
+          var cls = i === 0 ? 'gold' : (i === 1 ? 'silver' : (i === 2 ? 'bronze' : ''));
+          return '<div class="rank-item">' +
+            '<span class="idx ' + cls + '">' + (i + 1) + '</span>' +
+            '<span class="name">' + escapeHtml(e.name) + '</span>' +
+            '<span class="count"><b>' + e.total + '</b> 单 · 完成 ' + e.done + '</span>' +
+            '</div>';
+        }).join('');
+      }
+
+      // 服务类型
+      var svcEl = document.getElementById('serviceList');
+      var total = d.services.reduce(function (s, x) { return s + x.count; }, 0);
+      if (!total) {
+        svcEl.innerHTML = '<div class="empty-tip">暂无数据</div>';
+      } else {
+        svcEl.innerHTML = d.services.map(function (s) {
+          var pct = total ? (s.count / total * 100) : 0;
+          return '<div class="bar-wrap">' +
+            '<span class="bar-label">' + escapeHtml(s.type) + '</span>' +
+            '<div class="bar-track"><div class="bar-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+            '<span class="bar-value">' + s.count + '</span>' +
+            '</div>';
+        }).join('');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  document.querySelectorAll('.range-row button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.range-row button').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      loadData(parseInt(btn.dataset.days, 10));
+    });
+  });
+
+  loadData(7);
+})();
+</script>
+</body>
+</html>

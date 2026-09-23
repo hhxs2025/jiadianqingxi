@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>系统设置-家电清洗服务</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#2f7cf6;--text:#1f2937;--muted:#8b95a7;--line:#e8ecf4;
+    --ok:#0f9d58;--warn:#f59e0b;--err:#e5484d;
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    background:#f4f6fb;color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+  .topbar{
+    position:sticky;top:0;z-index:20;background:#1e3a5f;color:#fff;
+    padding:14px 18px;box-shadow:0 4px 16px rgba(0,0,0,.18);
+  }
+  .topbar .row{display:flex;align-items:center;gap:14px;max-width:1180px;margin:0 auto}
+  .topbar h1{font-size:16px;font-weight:600;flex:1}
+  .topbar a,.topbar button{
+    color:#fff;font-size:13px;text-decoration:none;background:rgba(255,255,255,.16);
+    padding:7px 13px;border-radius:8px;border:0;font-family:inherit;cursor:pointer;
+  }
+  .topbar button:hover,.topbar a:hover{background:rgba(255,255,255,.26)}
+
+  .wrap{max-width:900px;margin:0 auto;padding:16px 18px 0}
+
+  .card{
+    background:#fff;border-radius:14px;padding:20px;margin-bottom:16px;
+    box-shadow:0 2px 10px rgba(23,43,77,.05);
+  }
+  .card h2{
+    font-size:15px;font-weight:600;margin-bottom:16px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h2::before{content:'';width:3px;height:15px;border-radius:2px;background:var(--brand)}
+  .card h2 .badge{
+    font-size:11px;font-weight:500;color:#fff;padding:2px 8px;border-radius:10px;
+    background:#c3cddb;margin-left:6px;
+  }
+  .card h2 .badge.ok{background:var(--ok)}
+  .card h2 .badge.warn{background:var(--warn)}
+  .card h2 .badge.err{background:var(--err)}
+
+  .switch-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;background:#f8fafd;border-radius:10px;margin-bottom:16px;
+  }
+  .switch-row label{font-size:13.5px;color:#4b5563;font-weight:500}
+  .switch{position:relative;display:inline-block;width:46px;height:26px}
+  .switch input{opacity:0;width:0;height:0}
+  .switch .slider{
+    position:absolute;cursor:pointer;inset:0;background:#cbd5e1;
+    transition:.24s;border-radius:26px;
+  }
+  .switch .slider:before{
+    position:absolute;content:'';height:20px;width:20px;left:3px;bottom:3px;
+    background:#fff;transition:.24s;border-radius:50%;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+  }
+  .switch input:checked + .slider{background:var(--brand)}
+  .switch input:checked + .slider:before{transform:translateX(20px)}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .field{margin-bottom:0}
+  .field label{
+    display:block;font-size:12.5px;color:#4b5563;font-weight:500;margin-bottom:6px;
+  }
+  .field .hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .ctrl{
+    display:flex;align-items:center;background:#f8fafd;border:1.5px solid var(--line);
+    border-radius:10px;padding:0 12px;height:42px;transition:.15s;
+  }
+  .ctrl:focus-within{border-color:var(--brand);background:#fff;
+    box-shadow:0 0 0 3px rgba(47,124,246,.1)}
+  .ctrl input,.ctrl select{
+    flex:1;border:0;background:transparent;outline:none;font-size:14px;
+    color:var(--text);font-family:inherit;min-width:0;
+  }
+  .ctrl input::placeholder{color:#b6bfcd;font-size:13px}
+  .ctrl select{cursor:pointer;appearance:none;-webkit-appearance:none;
+    padding-right:20px;position:relative}
+  .ctrl .eye{
+    border:0;background:transparent;cursor:pointer;color:#8b95a7;
+    font-size:15px;padding:0 4px;line-height:1;
+  }
+  .ctrl.is-select{position:relative}
+  .ctrl.is-select::after{
+    content:'';position:absolute;right:16px;top:50%;width:7px;height:7px;
+    border-right:2px solid #9aa5b6;border-bottom:2px solid #9aa5b6;
+    transform:translateY(-70%) rotate(45deg);pointer-events:none;
+  }
+
+  .test-btn{
+    height:36px;padding:0 16px;border:1.5px solid var(--line);background:#fff;
+    color:#4b5563;font-size:13px;font-family:inherit;cursor:pointer;border-radius:8px;
+    font-weight:500;margin-top:12px;
+  }
+  .test-btn:hover{border-color:var(--brand);color:var(--brand)}
+  .test-btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .alert{
+    font-size:12.5px;padding:10px 12px;border-radius:8px;margin-bottom:12px;line-height:1.6;
+  }
+  .alert.warn{background:#fff7e6;color:#b45309;border:1px solid #ffe4b8}
+  .alert.info{background:#eef4ff;color:#1e63d8;border:1px solid #c7dbfa}
+
+  .footer-actions{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.96);
+    backdrop-filter:blur(10px);border-top:1px solid var(--line);
+    padding:12px 18px calc(12px + env(safe-area-inset-bottom));
+  }
+  .footer-inner{max-width:900px;margin:0 auto;display:flex;justify-content:flex-end;gap:12px}
+  .btn-primary{
+    height:44px;padding:0 32px;border:0;border-radius:10px;
+    background:linear-gradient(135deg,#4f92ff,#2f7cf6);color:#fff;
+    font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;
+    box-shadow:0 4px 14px rgba(47,124,246,.3);
+  }
+  .btn-primary:disabled{background:#c3d3ea;box-shadow:none;cursor:not-allowed}
+
+  .toast{
+    position:fixed;left:50%;bottom:100px;transform:translate(-50%,12px);z-index:1000;
+    background:rgba(31,41,55,.94);color:#fff;font-size:13.5px;padding:11px 20px;
+    border-radius:22px;opacity:0;pointer-events:none;transition:.24s;
+    max-width:80vw;text-align:center;line-height:1.5;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast.ok{background:rgba(15,157,88,.95)}
+  .toast.err{background:rgba(229,72,77,.95)}
+
+  .maintenance-info{
+    display:flex;gap:24px;font-size:13px;color:#4b5563;
+    padding:12px 14px;background:#f8fafd;border-radius:10px;margin-bottom:12px;
+  }
+  .maintenance-info b{color:#1f2937;font-weight:600}
+
+  @media (max-width: 820px) {
+    .topbar{padding:12px 14px}
+    .topbar .row{flex-wrap:wrap;gap:8px}
+    .topbar h1{font-size:14px;flex:1 1 100%;order:-1}
+    .topbar a,.topbar button{font-size:12.5px;padding:6px 11px}
+    .wrap{padding:12px 12px 0}
+    .grid{grid-template-columns:1fr}
+    .card{padding:16px}
+    .maintenance-info{flex-direction:column;gap:6px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>⚙️ 系统设置</h1>
+    <a href="{{ url_for('admin_dashboard') }}">数据看板</a>
+    <a href="{{ url_for('admin_engineers') }}">师傅管理</a>
+    <a href="{{ url_for('admin_orders') }}">全局订单</a>
+    <form method="post" action="{{ url_for('admin_logout') }}" style="display:inline">
+      <button type="submit">退出</button>
+    </form>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- 邮件 -->
+  <div class="card">
+    <h2>📧 邮件通知 <span class="badge {{ 'ok' if s.email_enabled == '1' else '' }}">
+      {{ '已启用' if s.email_enabled == '1' else '已禁用' }}</span></h2>
+
+    <div class="alert info">
+      这里填<b>管理员邮箱</b>（新订单必发到这里）。<br>
+      师傅邮箱不填在这，去「<b>师傅管理 → 改邮箱</b>」单独给每个师傅设置，系统会按订单归属自动发给对应师傅。<br>
+      配置 QQ 邮箱时需填"授权码"（不是登录密码）。
+    </div>
+
+    <div class="switch-row">
+      <label for="email_enabled">启用邮件通知</label>
+      <label class="switch">
+        <input type="checkbox" id="email_enabled" {{ 'checked' if s.email_enabled == '1' else '' }}>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label>SMTP 服务器</label>
+        <div class="ctrl"><input id="smtp_host" value="{{ s.smtp_host }}" placeholder="smtp.qq.com"></div>
+      </div>
+      <div class="field">
+        <label>端口</label>
+        <div class="ctrl"><input id="smtp_port" value="{{ s.smtp_port }}" placeholder="465"></div>
+      </div>
+      <div class="field">
+        <label>发件邮箱</label>
+        <div class="ctrl"><input id="smtp_user" value="{{ s.smtp_user }}" placeholder="12345678@qq.com"></div>
+      </div>
+      <div class="field">
+        <label>授权码</label>
+        <div class="ctrl">
+          <input id="smtp_pass" type="password" value="{{ s.smtp_pass }}" placeholder="16 位授权码">
+          <button type="button" class="eye" data-toggle="smtp_pass">👁</button>
+        </div>
+      </div>
+      <div class="field" style="grid-column:1 / -1;">
+        <label>管理员收件邮箱<span style="color:#8b95a7;font-weight:400;margin-left:6px;">（必填，多个用英文逗号分隔）</span></label>
+        <div class="ctrl"><input id="smtp_to" value="{{ s.smtp_to }}" placeholder="a@qq.com,b@163.com"></div>
+      </div>
+    </div>
+
+    <button class="test-btn" id="testEmailBtn" type="button">📨 发送测试邮件</button>
+  </div>
+
+  <!-- 短信 -->
+  <div class="card">
+    <h2>📱 短信通知 <span class="badge {{ 'ok' if s.sms_enabled == '1' else '' }}">
+      {{ '已启用' if s.sms_enabled == '1' else '已禁用' }}</span></h2>
+
+    <div class="alert warn">
+      短信需要先在服务商后台<b>申请签名和模板</b>（通知类型），审核通过后才能使用。<br>
+      模板申请推荐文案：<br>
+      · 新单通知（给师傅）：<code>您有新预约单，客户{1}，预约时间{2}，请登录工作台查看详情。</code><br>
+      · 接单通知（给客户）：<code>您的家电清洗预约已被{1}接单，师傅将提前电话与您联系。</code><br>
+      · 完成通知（给客户）：<code>您的家电清洗服务已完成，感谢使用。</code>
+    </div>
+
+    <div class="switch-row">
+      <label for="sms_enabled">启用短信通知</label>
+      <label class="switch">
+        <input type="checkbox" id="sms_enabled" {{ 'checked' if s.sms_enabled == '1' else '' }}>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label>服务商</label>
+        <div class="ctrl is-select">
+          <select id="sms_provider">
+            <option value="aliyun" {{ 'selected' if s.sms_provider == 'aliyun' else '' }}>阿里云</option>
+            <option value="tencent" {{ 'selected' if s.sms_provider == 'tencent' else '' }}>腾讯云</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>短信签名</label>
+        <div class="ctrl"><input id="sms_sign" value="{{ s.sms_sign }}" placeholder="家电清洗预约"></div>
+      </div>
+    </div>
+
+    <div id="aliyunFields" style="{{ '' if s.sms_provider == 'aliyun' else 'display:none' }}; margin-top:14px;">
+      <div class="alert info" style="margin-bottom:10px;">
+        阿里云 SDK：{{ '已安装' if has_aliyun else '未安装（镜像里没装，需要重新 build）' }}
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label>AccessKey ID</label>
+          <div class="ctrl"><input id="sms_aliyun_access_key_id" value="{{ s.sms_aliyun_access_key_id }}" placeholder="LTAI5t..."></div>
+        </div>
+        <div class="field">
+          <label>AccessKey Secret</label>
+          <div class="ctrl">
+            <input id="sms_aliyun_access_key_secret" type="password" value="{{ s.sms_aliyun_access_key_secret }}" placeholder="保密">
+            <button type="button" class="eye" data-toggle="sms_aliyun_access_key_secret">👁</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>新单通知模板 ID</label>
+          <div class="ctrl"><input id="sms_aliyun_template_order" value="{{ s.sms_aliyun_template_order }}" placeholder="SMS_123456"></div>
+        </div>
+        <div class="field">
+          <label>接单通知模板 ID</label>
+          <div class="ctrl"><input id="sms_aliyun_template_accepted" value="{{ s.sms_aliyun_template_accepted }}" placeholder="SMS_123457"></div>
+        </div>
+        <div class="field">
+          <label>完成通知模板 ID</label>
+          <div class="ctrl"><input id="sms_aliyun_template_done" value="{{ s.sms_aliyun_template_done }}" placeholder="SMS_123458"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tencentFields" style="{{ '' if s.sms_provider == 'tencent' else 'display:none' }}; margin-top:14px;">
+      <div class="alert info" style="margin-bottom:10px;">
+        腾讯云 SDK：{{ '已安装' if has_tencent else '未安装（镜像里没装，需要重新 build）' }}
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label>SecretId</label>
+          <div class="ctrl"><input id="sms_tencent_secret_id" value="{{ s.sms_tencent_secret_id }}" placeholder="AKID..."></div>
+        </div>
+        <div class="field">
+          <label>SecretKey</label>
+          <div class="ctrl">
+            <input id="sms_tencent_secret_key" type="password" value="{{ s.sms_tencent_secret_key }}" placeholder="保密">
+            <button type="button" class="eye" data-toggle="sms_tencent_secret_key">👁</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>SmsSdkAppId</label>
+          <div class="ctrl"><input id="sms_tencent_sdk_app_id" value="{{ s.sms_tencent_sdk_app_id }}" placeholder="1400xxxxxx"></div>
+        </div>
+        <div class="field">
+          <label>新单通知模板 ID</label>
+          <div class="ctrl"><input id="sms_tencent_template_order" value="{{ s.sms_tencent_template_order }}" placeholder="1234567"></div>
+        </div>
+        <div class="field">
+          <label>接单通知模板 ID</label>
+          <div class="ctrl"><input id="sms_tencent_template_accepted" value="{{ s.sms_tencent_template_accepted }}" placeholder="1234568"></div>
+        </div>
+        <div class="field">
+          <label>完成通知模板 ID</label>
+          <div class="ctrl"><input id="sms_tencent_template_done" value="{{ s.sms_tencent_template_done }}" placeholder="1234569"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <div class="field">
+        <label>测试手机号</label>
+        <div class="ctrl" style="max-width:280px;">
+          <input id="testSmsPhone" placeholder="13800138000" maxlength="11">
+        </div>
+      </div>
+      <button class="test-btn" id="testSmsBtn" type="button">📲 发送测试短信</button>
+    </div>
+  </div>
+
+  <!-- 通用 -->
+  <div class="card">
+    <h2>🔧 通用配置</h2>
+    <div class="field">
+      <label>公网地址（用于邮件里的图片链接）</label>
+      <div class="ctrl">
+        <input id="public_url" value="{{ s.public_url }}" placeholder="https://jdqx.example.com">
+      </div>
+      <div class="hint">留空则用访问系统时的域名。内网访问时邮件图片链接会打不开，所以建议填公网地址。</div>
+    </div>
+  </div>
+
+  <!-- 维护 -->
+  <div class="card">
+    <h2>🧹 维护</h2>
+    <div class="maintenance-info">
+      <span>上传目录：<b>{{ upload_count }}</b> 个文件</span>
+      <span>占用空间：<b>
+        {% if upload_size > 1048576 %}{{ '%.1f' % (upload_size / 1048576) }} MB
+        {% else %}{{ '%.1f' % (upload_size / 1024) }} KB{% endif %}
+      </b></span>
+    </div>
+    <button class="test-btn" id="cleanupBtn" type="button">🗑 清理孤儿文件</button>
+    <div class="hint" style="margin-top:6px;">
+      删除 uploads/ 里没被任何订单引用的图片。用户取消订单后遗留的文件会被清掉。
+    </div>
+  </div>
+
+  <!-- EXIF 提示 -->
+  <div class="card">
+    <h2>🖼 EXIF 校验</h2>
+    <div class="alert {{ 'info' if has_pil else 'warn' }}" style="margin-bottom:0;">
+      {% if has_pil %}
+        ✅ Pillow 已安装，照片会用 EXIF 拍摄时间做间隔校验；没有 EXIF 时自动回退到上传时间。
+      {% else %}
+        ⚠️ Pillow 未安装，照片只按上传时间校验。想启用 EXIF 校验，需要重新 build 镜像（`pip install Pillow`）。
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="footer-actions">
+  <div class="footer-inner">
+    <button class="btn-primary" id="saveBtn" type="button">保存设置</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+
+  function toast(msg, type) {
+    toastEl.textContent = msg;
+    toastEl.className = 'toast show ' + (type || '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      toastEl.classList.remove('show', 'ok', 'err');
+    }, 2800);
+  }
+
+  document.querySelectorAll('.eye').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.dataset.toggle;
+      var input = document.getElementById(id);
+      if (!input) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+  });
+
+  document.getElementById('sms_provider').addEventListener('change', function () {
+    var provider = this.value;
+    document.getElementById('aliyunFields').style.display = provider === 'aliyun' ? '' : 'none';
+    document.getElementById('tencentFields').style.display = provider === 'tencent' ? '' : 'none';
+  });
+
+  var FIELDS = [
+    'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_to',
+    'sms_sign',
+    'sms_aliyun_access_key_id', 'sms_aliyun_access_key_secret',
+    'sms_aliyun_template_order', 'sms_aliyun_template_accepted', 'sms_aliyun_template_done',
+    'sms_tencent_secret_id', 'sms_tencent_secret_key', 'sms_tencent_sdk_app_id',
+    'sms_tencent_template_order', 'sms_tencent_template_accepted', 'sms_tencent_template_done',
+    'public_url',
+  ];
+
+  var saveBtn = document.getElementById('saveBtn');
+  saveBtn.addEventListener('click', async function () {
+    var data = {
+      email_enabled: document.getElementById('email_enabled').checked ? '1' : '0',
+      sms_enabled: document.getElementById('sms_enabled').checked ? '1' : '0',
+      sms_provider: document.getElementById('sms_provider').value,
+    };
+    FIELDS.forEach(function (k) {
+      var el = document.getElementById(k);
+      if (el) data[k] = el.value.trim();
+    });
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = '保存中…';
+    try {
+      var res = await fetch('/admin/api/settings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      var d = await res.json();
+      if (d.ok) {
+        toast('✅ ' + (d.msg || '已保存'), 'ok');
+      } else {
+        toast(d.msg || '保存失败', 'err');
+      }
+    } catch (e) {
+      toast('网络异常', 'err');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '保存设置';
+    }
+  });
+
+  document.getElementById('testEmailBtn').addEventListener('click', async function () {
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = '发送中…';
+    try {
+      var saveRes = await fetch('/admin/api/settings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email_enabled: document.getElementById('email_enabled').checked ? '1' : '0',
+          smtp_host: document.getElementById('smtp_host').value.trim(),
+          smtp_port: document.getElementById('smtp_port').value.trim(),
+          smtp_user: document.getElementById('smtp_user').value.trim(),
+          smtp_pass: document.getElementById('smtp_pass').value.trim(),
+          smtp_to: document.getElementById('smtp_to').value.trim(),
+        })
+      });
+      await saveRes.json();
+
+      var res = await fetch('/admin/api/settings/test_email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      var d = await res.json();
+      toast(d.msg, d.ok ? 'ok' : 'err');
+    } catch (e) {
+      toast('网络异常', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📨 发送测试邮件';
+    }
+  });
+
+  document.getElementById('testSmsBtn').addEventListener('click', async function () {
+    var btn = this;
+    var phone = document.getElementById('testSmsPhone').value.trim();
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      toast('请输入正确的 11 位手机号', 'err');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '发送中…';
+    try {
+      var data = {
+        sms_provider: document.getElementById('sms_provider').value,
+        sms_sign: document.getElementById('sms_sign').value.trim(),
+      };
+      var p = data.sms_provider;
+      if (p === 'aliyun') {
+        data.sms_aliyun_access_key_id = document.getElementById('sms_aliyun_access_key_id').value.trim();
+        data.sms_aliyun_access_key_secret = document.getElementById('sms_aliyun_access_key_secret').value.trim();
+        data.sms_aliyun_template_order = document.getElementById('sms_aliyun_template_order').value.trim();
+      } else if (p === 'tencent') {
+        data.sms_tencent_secret_id = document.getElementById('sms_tencent_secret_id').value.trim();
+        data.sms_tencent_secret_key = document.getElementById('sms_tencent_secret_key').value.trim();
+        data.sms_tencent_sdk_app_id = document.getElementById('sms_tencent_sdk_app_id').value.trim();
+        data.sms_tencent_template_order = document.getElementById('sms_tencent_template_order').value.trim();
+      }
+
+      await fetch('/admin/api/settings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      var res = await fetch('/admin/api/settings/test_sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone })
+      });
+      var d = await res.json();
+      toast(d.msg, d.ok ? 'ok' : 'err');
+    } catch (e) {
+      toast('网络异常', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📲 发送测试短信';
+    }
+  });
+
+  document.getElementById('cleanupBtn').addEventListener('click', async function () {
+    if (!confirm('确定要清理 uploads/ 里未被引用的文件吗？此操作不可恢复。')) return;
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = '清理中…';
+    try {
+      var res = await fetch('/admin/api/cleanup', { method: 'POST' });
+      var d = await res.json();
+      toast(d.msg || '清理完成', d.ok ? 'ok' : 'err');
+      if (d.ok) {
+        setTimeout(function () { location.reload(); }, 1200);
+      }
+    } catch (e) {
+      toast('网络异常', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🗑 清理孤儿文件';
+    }
+  });
+})();
+</script>
+</body>
+</html>

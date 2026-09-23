@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>全局订单-家电清洗服务</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#2f7cf6;--text:#1f2937;--muted:#8b95a7;--line:#e8ecf4;
+    --ok:#0f9d58;--warn:#f59e0b;--err:#e5484d;
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    background:#f4f6fb;color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;
+    padding-bottom:40px;
+  }
+  .topbar{
+    position:sticky;top:0;z-index:20;background:#1e3a5f;color:#fff;
+    padding:14px 18px;box-shadow:0 4px 16px rgba(0,0,0,.18);
+  }
+  .topbar .row{display:flex;align-items:center;gap:14px;max-width:1180px;margin:0 auto}
+  .topbar h1{font-size:16px;font-weight:600;flex:1}
+  .topbar a,.topbar button{
+    color:#fff;font-size:13px;text-decoration:none;background:rgba(255,255,255,.16);
+    padding:7px 13px;border-radius:8px;border:0;font-family:inherit;cursor:pointer;
+  }
+  .topbar button:hover,.topbar a:hover{background:rgba(255,255,255,.26)}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 0}
+
+  .filters{
+    background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:16px;
+    box-shadow:0 2px 10px rgba(23,43,77,.05);display:flex;flex-wrap:wrap;
+    align-items:center;gap:10px;
+  }
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;flex:1}
+  .tabs a{
+    text-decoration:none;color:#4b5563;font-size:13px;padding:7px 14px;
+    border-radius:20px;background:#f4f6fb;transition:.15s;white-space:nowrap;
+  }
+  .tabs a:hover{background:#e8eefa}
+  .tabs a.on{background:var(--brand);color:#fff;font-weight:500}
+  .tabs a .n{opacity:.7;margin-left:4px;font-size:12px}
+
+  .filters form{display:flex;gap:8px;flex-wrap:wrap}
+  .filters select,.filters input{
+    height:38px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;
+    font-size:13.5px;font-family:inherit;outline:none;background:#f8fafd;transition:.15s;
+  }
+  .filters select{min-width:120px;cursor:pointer}
+  .filters input{width:180px}
+  .filters select:focus,.filters input:focus{
+    border-color:var(--brand);background:#fff;
+    box-shadow:0 0 0 3px rgba(47,124,246,.1);
+  }
+  .filters button{
+    height:38px;padding:0 16px;border:0;border-radius:10px;background:var(--brand);
+    color:#fff;font-size:13.5px;font-family:inherit;cursor:pointer;font-weight:500;
+  }
+  .filters button:hover{background:#1e63d8}
+
+  .table-wrap{background:#fff;border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 10px rgba(23,43,77,.05);}
+  table{width:100%;border-collapse:collapse}
+  thead th{
+    background:#f8fafd;text-align:left;padding:12px 14px;font-size:12.5px;
+    color:#6b7280;font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  tbody td{
+    padding:14px;border-bottom:1px solid #f0f3f9;vertical-align:top;font-size:13.5px;
+    line-height:1.6;
+  }
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fafcff}
+
+  .ord-no{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--muted)}
+  .svc{font-weight:600;font-size:14px;color:#1f2937}
+  .svc .obj{color:var(--brand);font-weight:500}
+  .addr{color:#374151;max-width:240px}
+  .remark{color:#6b7280;font-size:12.5px;font-style:italic;max-width:180px}
+  .phone{font-family:ui-monospace,Menlo,monospace;color:#1e63d8;font-weight:500}
+  .time-slot{
+    display:inline-block;font-size:12px;color:#0369a1;
+    background:#e0f2fe;padding:3px 9px;border-radius:6px;margin-top:4px;
+  }
+  .eng-tag{
+    display:inline-block;font-size:12px;color:#7c3aed;
+    background:#f3e8ff;padding:3px 9px;border-radius:6px;margin-top:4px;
+  }
+  .eng-none{
+    display:inline-block;font-size:12px;color:#b45309;
+    background:#fff7e6;padding:3px 9px;border-radius:6px;margin-top:4px;
+    font-weight:500;
+  }
+
+  .thumbs{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+  .thumbs img{
+    width:52px;height:52px;object-fit:cover;border-radius:8px;cursor:zoom-in;
+    border:1px solid var(--line);transition:.15s;
+  }
+  .thumbs img:hover{transform:scale(1.06);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  .sign-thumb{
+    height:36px;background:#fafbfe;border:1px solid var(--line);border-radius:6px;
+    padding:2px 4px;cursor:zoom-in;
+  }
+  .gap-badge{
+    font-size:11px;color:var(--ok);background:#e9f8f0;padding:2px 7px;
+    border-radius:10px;display:inline-block;
+  }
+  .gap-badge.exif{background:#eef4ff;color:#1e63d8}
+
+  .badge{display:inline-block;font-size:12px;padding:4px 11px;border-radius:20px;
+    font-weight:500;white-space:nowrap;}
+  .badge.s0{background:#fff7e6;color:#b45309}
+  .badge.s1{background:#eef4ff;color:#1e63d8}
+  .badge.s2{background:#e0f2fe;color:#0369a1}
+  .badge.s3{background:#e9f8f0;color:#0f9d58}
+  .badge.s4{background:#f3f4f6;color:#6b7280}
+
+  .actions{display:flex;flex-wrap:wrap;gap:6px;min-width:200px}
+  .actions button{
+    border:1px solid var(--line);background:#fff;color:#4b5563;font-size:12.5px;
+    padding:7px 13px;border-radius:8px;font-family:inherit;cursor:pointer;transition:.15s;
+    white-space:nowrap;font-weight:500;
+  }
+  .actions button:hover{border-color:var(--brand);color:var(--brand);background:#f5f9ff}
+  .actions button.primary{
+    background:linear-gradient(135deg,#4f92ff,#2f7cf6);
+    color:#fff;border-color:transparent;font-weight:600;
+    box-shadow:0 3px 10px rgba(47,124,246,.25);
+  }
+  .actions button.primary:hover{
+    background:linear-gradient(135deg,#3f82ef,#1e63d8);
+    color:#fff;box-shadow:0 4px 14px rgba(47,124,246,.35);
+  }
+  .actions button.primary::after{
+    content:'→';margin-left:5px;font-weight:400;opacity:.85;
+  }
+  .actions button.assign{
+    background:#7c3aed;color:#fff;border-color:transparent;font-weight:600;
+    box-shadow:0 3px 10px rgba(124,58,237,.25);
+  }
+  .actions button.assign:hover{
+    background:#6d28d9;color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.35);
+  }
+  .actions button.assign::before{content:'👷 ';font-weight:400;}
+
+  /* v1.0.6：删除按钮 */
+  .actions button.del{
+    background:#fff;color:#e5484d;border-color:#fbd5d5;
+  }
+  .actions button.del:hover{
+    background:#fef2f2;border-color:#e5484d;color:#b91c1c;
+  }
+  .actions button.del::before{content:'🗑 ';font-weight:400;}
+
+  .actions .done-tip{font-size:12.5px;color:#a8b2c1;padding:6px 0;display:inline-block;}
+
+  .empty{text-align:center;padding:80px 20px;color:var(--muted)}
+  .empty .ico{font-size:48px;margin-bottom:14px;opacity:.5}
+
+  .lightbox{
+    position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.88);
+    display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;
+  }
+  .lightbox[hidden]{display:none}
+  .lightbox img{max-width:100%;max-height:100%;border-radius:12px}
+
+  .toast{
+    position:fixed;left:50%;bottom:34px;transform:translate(-50%,12px);z-index:1000;
+    background:rgba(31,41,55,.94);color:#fff;font-size:13.5px;padding:11px 20px;
+    border-radius:22px;opacity:0;pointer-events:none;transition:.24s;
+    max-width:80vw;text-align:center;line-height:1.5;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* 派单弹窗 */
+  .assign-modal[hidden]{display:none}
+  .assign-modal{position:fixed;inset:0;z-index:600;display:flex;align-items:center;
+    justify-content:center;padding:24px}
+  .assign-mask{position:absolute;inset:0;background:rgba(15,23,42,.5)}
+  .assign-box{
+    position:relative;background:#fff;border-radius:16px;max-width:420px;
+    width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);
+  }
+  .assign-box h3{font-size:17px;font-weight:600;margin-bottom:6px}
+  .assign-box .sub{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+  .assign-box .field{margin-bottom:14px}
+  .assign-box label{display:block;font-size:12.5px;color:#4b5563;font-weight:500;margin-bottom:6px}
+  .assign-box select{
+    width:100%;height:48px;border:1.5px solid var(--line);border-radius:10px;
+    padding:0 12px;font-size:15px;font-family:inherit;outline:none;
+    background:#f8fafd;cursor:pointer;
+  }
+  .assign-box select:focus{border-color:var(--brand);background:#fff;
+    box-shadow:0 0 0 3px rgba(47,124,246,.1)}
+  .assign-box .tip{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:16px}
+  .assign-box .btns{display:flex;gap:10px}
+  .assign-box .btns button{
+    flex:1;height:46px;border:0;border-radius:10px;font-size:14.5px;font-weight:600;
+    font-family:inherit;cursor:pointer;
+  }
+  .assign-box .btns .ok{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;
+    box-shadow:0 4px 14px rgba(124,58,237,.3)}
+  .assign-box .btns .cancel{background:#fff;color:#4b5563;border:1.5px solid var(--line)}
+
+  @media (max-width: 820px) {
+    .topbar{padding:12px 14px}
+    .topbar .row{flex-wrap:wrap;gap:8px}
+    .topbar h1{font-size:14px;flex:1 1 100%;order:-1}
+    .topbar a,.topbar button{font-size:12.5px;padding:6px 11px}
+
+    .wrap{padding:12px 12px 0}
+
+    .filters{padding:12px;margin-bottom:12px;flex-direction:column;align-items:stretch}
+    .tabs{gap:6px}
+    .tabs a{font-size:12.5px;padding:6px 12px}
+    .filters form{width:100%;flex-direction:column;gap:8px}
+    .filters select,.filters input,.filters button{width:100%}
+
+    .table-wrap{background:transparent;box-shadow:none;border-radius:0;overflow:visible}
+    table, thead, tbody, th, td, tr{display:block}
+    thead{display:none}
+
+    tbody tr{
+      background:#fff;border-radius:14px;margin-bottom:12px;padding:14px;
+      box-shadow:0 2px 10px rgba(23,43,77,.06);
+    }
+    tbody tr:hover{background:#fff}
+    tbody td{border-bottom:0;padding:0;font-size:13.5px}
+    tbody td + td{margin-top:12px;padding-top:12px;border-top:1px dashed #f0f3f9}
+    tbody td[data-label]::before{
+      content: attr(data-label);display:block;font-size:11.5px;
+      color:#8b95a7;font-weight:500;margin-bottom:6px;
+    }
+    .ord-no{font-size:12px}
+    .addr,.remark{max-width:none}
+    .thumbs{gap:8px;margin-bottom:10px}
+    .thumbs img{width:72px;height:72px;border-radius:10px}
+    .sign-thumb{height:48px;padding:3px 6px}
+    .actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
+      gap:8px;min-width:0}
+    .actions button{font-size:13.5px;padding:11px 12px;border-radius:10px;text-align:center}
+    .actions button.primary::after{content:'';margin-left:0}
+    .actions button.assign::before{content:'';}
+    .actions button.del::before{content:'';}
+    .actions .done-tip{padding:10px 0;text-align:center;font-size:13px}
+
+    .assign-modal{padding:0;align-items:flex-end}
+    .assign-box{
+      max-width:none;width:100%;border-radius:20px 20px 0 0;
+      padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    }
+    .assign-box .btns button{height:48px;font-size:15px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>全局订单（共 {{ total }} 单）</h1>
+    <a href="{{ url_for('admin_dashboard') }}">数据看板</a>
+    <a href="{{ url_for('admin_engineers') }}">师傅管理</a>
+    <a href="{{ url_for('admin_settings') }}">系统设置</a>
+    <a href="{{ url_for('admin_export') }}">导出</a>
+    <form method="post" action="{{ url_for('admin_logout') }}" style="display:inline">
+      <button type="submit">退出</button>
+    </form>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="filters">
+    <div class="tabs">
+      <a href="{{ url_for('admin_orders', engineer_id=eng_id, kw=kw) }}"
+         class="{{ 'on' if not status else '' }}">全部<span class="n">{{ total }}</span></a>
+      {% for s in all_status %}
+      <a href="{{ url_for('admin_orders', status=s, engineer_id=eng_id, kw=kw) }}"
+         class="{{ 'on' if status == s else '' }}">{{ s }}<span class="n">{{ counts[s] }}</span></a>
+      {% endfor %}
+    </div>
+    <form method="get" action="{{ url_for('admin_orders') }}">
+      {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+      <select name="engineer_id">
+        <option value="">全部师傅</option>
+        {% for e in engineers %}
+        <option value="{{ e['id'] }}"
+          {% if eng_id == e['id']|string %}selected{% endif %}>{{ e['name'] }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" name="kw" value="{{ kw }}" placeholder="订单号 / 电话 / 地址">
+      <button type="submit">筛选</button>
+    </form>
+  </div>
+
+  {% set ACTION_LABEL = {
+    '已接单': '接单',
+    '服务中': '开始服务',
+    '已完成': '完成服务',
+    '已取消': '取消订单',
+    '待接单': '恢复待接单'
+  } %}
+
+  {% if orders %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>订单 / 状态</th>
+          <th>服务 / 师傅</th>
+          <th>预约时间</th>
+          <th>地址 / 电话</th>
+          <th>凭证（照片 + 签名）</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for o in orders %}
+        <tr data-id="{{ o['id'] }}">
+          <td data-label="订单号">
+            <div class="ord-no">{{ o['order_no'] }}</div>
+            <span class="badge s{{ all_status.index(o['status']) if o['status'] in all_status else 0 }}">
+              {{ o['status'] }}
+            </span>
+            <div style="font-size:11.5px;color:#a8b2c1;margin-top:5px">{{ o['created_at'] }}</div>
+          </td>
+          <td data-label="服务 / 师傅">
+            <div class="svc">
+              {{ o['service_type'] }}
+              {% if o['clean_object'] %}<span class="obj">· {{ o['clean_object'] }}</span>{% endif %}
+            </div>
+            {% if o['engineer_name'] %}
+            <span class="eng-tag">👷{{ o['engineer_name'] }}</span>
+            {% else %}
+            <span class="eng-none">⚠ 未指派</span>
+            {% endif %}
+            {% if o['remark'] %}<div class="remark">{{ o['remark'] }}</div>{% endif %}
+          </td>
+          <td data-label="预约时间">
+            <div style="font-weight:500">{{ o['book_date'] }}</div>
+            {% if o['time_slot'] %}
+            <span class="time-slot">{{ o['time_slot'] }}</span>
+            {% endif %}
+          </td>
+          <td data-label="地址 / 电话">
+            <div class="addr">{{ o['address'] }}</div>
+            <div class="phone" style="margin-top:5px">{{ o['contact_phone'] }}</div>
+          </td>
+          <td data-label="凭证">
+            <div class="thumbs">
+              {% if o['photo1'] %}
+              <img src="{{ url_for('uploaded_file', filename=o['photo1']) }}"
+                   alt="照片1" onclick="zoom(this.src)">
+              {% endif %}
+              {% if o['photo2'] %}
+              <img src="{{ url_for('uploaded_file', filename=o['photo2']) }}"
+                   alt="照片2" onclick="zoom(this.src)">
+              {% endif %}
+            </div>
+            {% if o['photo_gap'] %}
+              {% if o['gap_source'] == 'exif' %}
+              <span class="gap-badge exif">EXIF 间隔 {{ o['photo_gap'] }}s</span>
+              {% else %}
+              <span class="gap-badge">间隔 {{ o['photo_gap'] }}s</span>
+              {% endif %}
+            {% endif %}
+            {% if o['signature'] %}
+            <div style="margin-top:8px;">
+              <div style="font-size:11.5px;color:#a8b2c1;margin-bottom:3px;">本人签名</div>
+              <img class="sign-thumb"
+                   src="{{ url_for('uploaded_file', filename=o['signature']) }}"
+                   alt="签名" onclick="zoom(this.src)">
+            </div>
+            {% endif %}
+          </td>
+          <td data-label="操作">
+            <div class="actions">
+              {% set ns = next_state.get(o['status'], []) %}
+              {% if ns %}
+                {% for s in ns %}
+                <button type="button"
+                        data-id="{{ o['id'] }}"
+                        data-status="{{ s }}"
+                        data-current="{{ o['status'] }}"
+                        class="{{ 'primary' if s != '已取消' else '' }}">
+                  {{ ACTION_LABEL.get(s, s) }}
+                </button>
+                {% endfor %}
+              {% else %}
+                <span class="done-tip">订单已结束</span>
+              {% endif %}
+
+              {# v1.0.6：已完成/已取消的订单，不显示派单按钮 #}
+              {% if o['status'] not in ['已完成', '已取消'] %}
+              <button type="button"
+                      class="assign"
+                      data-id="{{ o['id'] }}"
+                      data-engineer-id="{{ o['engineer_id'] or '' }}"
+                      data-order-no="{{ o['order_no'] }}"
+                      data-current-name="{{ o['engineer_name'] or '' }}">
+                {{ '改派' if o['engineer_id'] else '派单' }}
+              </button>
+              {% endif %}
+
+              {# v1.0.6：删除按钮，任何状态都可删 #}
+              <button type="button"
+                      class="del"
+                      data-id="{{ o['id'] }}"
+                      data-order-no="{{ o['order_no'] }}">
+                删除
+              </button>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-wrap">
+    <div class="empty">
+      <div>暂无订单</div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- 派单弹窗 -->
+<div class="assign-modal" id="assignModal" hidden>
+  <div class="assign-mask" id="assignMask"></div>
+  <div class="assign-box">
+    <h3>👷 派单</h3>
+    <div class="sub" id="assignSub">订单</div>
+
+    <div class="field">
+      <label for="assignEngineer">选择师傅</label>
+      <select id="assignEngineer">
+        <option value="">— 不指派（取消归属） —</option>
+        {% for e in engineers %}
+        <option value="{{ e['id'] }}">{{ e['name'] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="tip">
+      · 派单后，该师傅会立即收到新单邮件（如配置了邮箱）和短信（如开启了短信）<br>
+      · 客户填了服务码的单，通常已经绑定师傅，如无需改动可保留原样<br>
+      · 选择"不指派"，可以把订单恢复为无主状态
+    </div>
+
+    <div class="btns">
+      <button class="cancel" id="assignCancel" type="button">取消</button>
+      <button class="ok" id="assignOk" type="button">确认派单</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" hidden onclick="this.hidden=true">
+  <img id="lightboxImg" alt="照片大图">
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2400);
+  }
+
+  window.zoom = function (src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').hidden = false;
+  };
+
+  /* ============ 订单状态操作 ============ */
+  document.querySelectorAll('.actions button[data-status]').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      var id = btn.dataset.id;
+      var status = btn.dataset.status;
+      var current = btn.dataset.current || '';
+      var actionText = btn.textContent.trim();
+
+      var confirmMsg = current
+        ? '确定把订单从「' + current + '」改为「' + status + '」吗？\n（' + actionText + '）'
+        : '确定执行「' + actionText + '」吗？';
+      if (!confirm(confirmMsg)) return;
+
+      btn.disabled = true;
+      try {
+        var res = await fetch('/admin/api/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: Number(id), status: status })
+        });
+        var d = await res.json();
+        if (d.ok) {
+          toast('✅ 已' + actionText + '，当前状态：' + status);
+          setTimeout(function () { location.reload(); }, 700);
+        } else {
+          toast(d.msg || '操作失败');
+          btn.disabled = false;
+        }
+      } catch (e) {
+        toast('网络异常');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  /* ============ 派单弹窗 ============ */
+  var assignModal = document.getElementById('assignModal');
+  var assignSubEl = document.getElementById('assignSub');
+  var assignSelect = document.getElementById('assignEngineer');
+  var assignOrderId = null;
+
+  function openAssignModal(id, orderNo, currentEid, currentName) {
+    assignOrderId = Number(id);
+    var sub = '订单 ' + orderNo;
+    if (currentName) {
+      sub += '　当前：' + currentName;
+    } else {
+      sub += '　当前：未指派';
+    }
+    assignSubEl.textContent = sub;
+    assignSelect.value = currentEid || '';
+    assignModal.hidden = false;
+    setTimeout(function () { assignSelect.focus(); }, 50);
+  }
+
+  function closeAssignModal() {
+    assignModal.hidden = true;
+    assignOrderId = null;
+  }
+
+  document.getElementById('assignMask').addEventListener('click', closeAssignModal);
+  document.getElementById('assignCancel').addEventListener('click', closeAssignModal);
+
+  document.querySelectorAll('.actions button.assign').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      openAssignModal(
+        btn.dataset.id,
+        btn.dataset.orderNo || '',
+        btn.dataset.engineerId || '',
+        btn.dataset.currentName || ''
+      );
+    });
+  });
+
+  document.getElementById('assignOk').addEventListener('click', async function () {
+    if (!assignOrderId) return;
+
+    var eid = assignSelect.value;
+
+    this.disabled = true;
+    this.textContent = '处理中…';
+    try {
+      var res = await fetch('/admin/api/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: assignOrderId, engineer_id: eid })
+      });
+      var d = await res.json();
+      if (d.ok) {
+        toast('✅ ' + (d.msg || '已操作'));
+        closeAssignModal();
+        setTimeout(function () { location.reload(); }, 700);
+      } else {
+        toast(d.msg || '操作失败');
+      }
+    } catch (e) {
+      toast('网络异常');
+    } finally {
+      this.disabled = false;
+      this.textContent = '确认派单';
+    }
+  });
+
+  /* ============ v1.0.6：删除订单 ============ */
+  document.querySelectorAll('.actions button.del').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      var id = btn.dataset.id;
+      var orderNo = btn.dataset.orderNo || '';
+
+      var msg = '确定删除订单 ' + orderNo + ' 吗？\n' +
+                '此操作不可恢复，订单的照片和签名也会一并删除。\n' +
+                '如客户还在等这单，请谨慎操作。';
+      if (!confirm(msg)) return;
+
+      // 二次确认，防止误删
+      var really = prompt('删除操作不可恢复。\n\n请再次确认，输入订单号后 4 位：');
+      if (!really) return;
+      if (really.trim() !== orderNo.slice(-4)) {
+        toast('订单号后 4 位不正确，已取消');
+        return;
+      }
+
+      btn.disabled = true;
+      try {
+        var res = await fetch('/admin/api/orders/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: Number(id) })
+        });
+        var d = await res.json();
+        if (d.ok) {
+          toast('✅ ' + (d.msg || '订单已删除'));
+          setTimeout(function () { location.reload(); }, 800);
+        } else {
+          toast(d.msg || '删除失败');
+          btn.disabled = false;
+        }
+      } catch (e) {
+        toast('网络异常');
+        btn.disabled = false;
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

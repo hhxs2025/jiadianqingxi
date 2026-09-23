@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>工作台-家电清洗服务</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#2f7cf6;--text:#1f2937;--muted:#8b95a7;--line:#e8ecf4;
+    --ok:#0f9d58;--warn:#f59e0b;--err:#e5484d;
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    background:#f4f6fb;color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;
+    padding-bottom:40px;
+  }
+  .topbar{
+    position:sticky;top:0;z-index:20;background:#1e3a5f;color:#fff;
+    padding:14px 18px;box-shadow:0 4px 16px rgba(0,0,0,.18);
+  }
+  .topbar .row{display:flex;align-items:center;gap:10px;max-width:1180px;margin:0 auto}
+  .topbar h1{font-size:16px;font-weight:600;flex:1}
+  .topbar h1 .name{color:#7cb1ff;font-weight:700}
+  .topbar button{
+    color:#fff;font-size:13px;text-decoration:none;background:rgba(255,255,255,.16);
+    padding:7px 13px;border-radius:8px;border:0;font-family:inherit;cursor:pointer;
+  }
+  .topbar button:hover{background:rgba(255,255,255,.26)}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 18px 0}
+
+  /* 服务码大卡片 */
+  .my-code{
+    background:linear-gradient(135deg,#4f92ff,#2f7cf6);color:#fff;
+    border-radius:16px;padding:20px;margin-bottom:18px;
+    box-shadow:0 10px 28px rgba(47,124,246,.32);
+  }
+  .my-code h2{font-size:13px;font-weight:500;opacity:.88;margin-bottom:10px;
+    letter-spacing:.3px}
+  .my-code .code-display{
+    font-family:ui-monospace,Menlo,monospace;font-size:36px;font-weight:700;
+    letter-spacing:6px;background:rgba(255,255,255,.18);
+    padding:14px 20px;border-radius:12px;
+    display:inline-block;margin-bottom:14px;cursor:pointer;transition:.18s;
+    user-select:all;
+  }
+  .my-code .code-display:hover{background:rgba(255,255,255,.28)}
+  .my-code .code-display.copied{background:rgba(15,157,88,.5)}
+  .my-code .tip{font-size:12.5px;opacity:.88;line-height:1.7;margin-bottom:14px}
+  .my-code .btns{display:flex;gap:10px;flex-wrap:wrap}
+  .my-code .btns button{
+    height:40px;padding:0 18px;border:0;border-radius:10px;
+    font-family:inherit;font-size:13.5px;font-weight:500;cursor:pointer;
+    transition:.15s;
+  }
+  .my-code .btns .white{background:#fff;color:#2f7cf6}
+  .my-code .btns .white:hover{background:#f0f6ff}
+  .my-code .btns .ghost{background:rgba(255,255,255,.18);color:#fff}
+  .my-code .btns .ghost:hover{background:rgba(255,255,255,.3)}
+
+  /* 统计卡片 */
+  .stat-row{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;
+  }
+  .stat{
+    background:#fff;border-radius:12px;padding:14px 16px;
+    box-shadow:0 2px 10px rgba(23,43,77,.05);
+  }
+  .stat .num{font-size:22px;font-weight:700;line-height:1.2}
+  .stat .lbl{font-size:12px;color:var(--muted);margin-top:4px}
+  .stat.s0 .num{color:var(--warn)}
+  .stat.s1 .num{color:#1e63d8}
+  .stat.s2 .num{color:#0369a1}
+  .stat.s3 .num{color:var(--ok)}
+  .stat.s4 .num{color:#9ca3af}
+
+  /* 表格 */
+  .table-wrap{background:#fff;border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 10px rgba(23,43,77,.05);}
+  table{width:100%;border-collapse:collapse}
+  thead th{
+    background:#f8fafd;text-align:left;padding:12px 14px;font-size:12.5px;
+    color:#6b7280;font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  tbody td{
+    padding:14px;border-bottom:1px solid #f0f3f9;vertical-align:top;font-size:13.5px;
+    line-height:1.6;
+  }
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fafcff}
+
+  .ord-no{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--muted)}
+  .svc{font-weight:600;font-size:14px;color:#1f2937}
+  .svc .obj{color:var(--brand);font-weight:500}
+  .addr{color:#374151;max-width:240px}
+  .remark{color:#6b7280;font-size:12.5px;font-style:italic;max-width:180px}
+  .phone{font-family:ui-monospace,Menlo,monospace;color:#1e63d8;font-weight:500}
+  .time-slot{
+    display:inline-block;font-size:12px;color:#0369a1;
+    background:#e0f2fe;padding:3px 9px;border-radius:6px;margin-top:4px;
+  }
+
+  .thumbs{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+  .thumbs img{
+    width:52px;height:52px;object-fit:cover;border-radius:8px;cursor:zoom-in;
+    border:1px solid var(--line);transition:.15s;
+  }
+  .thumbs img:hover{transform:scale(1.06)}
+  .sign-thumb{
+    height:36px;background:#fafbfe;border:1px solid var(--line);border-radius:6px;
+    padding:2px 4px;cursor:zoom-in;
+  }
+  .gap-badge{
+    font-size:11px;color:var(--ok);background:#e9f8f0;padding:2px 7px;
+    border-radius:10px;display:inline-block;
+  }
+
+  .badge{display:inline-block;font-size:12px;padding:4px 11px;border-radius:20px;
+    font-weight:500;white-space:nowrap;}
+  .badge.s0{background:#fff7e6;color:#b45309}
+  .badge.s1{background:#eef4ff;color:#1e63d8}
+  .badge.s2{background:#e0f2fe;color:#0369a1}
+  .badge.s3{background:#e9f8f0;color:#0f9d58}
+  .badge.s4{background:#f3f4f6;color:#6b7280}
+
+  /* 操作按钮 —— 突出「动作」感 */
+  .actions{display:flex;flex-wrap:wrap;gap:6px;min-width:170px}
+  .actions button{
+    border:1px solid var(--line);background:#fff;color:#4b5563;font-size:12.5px;
+    padding:7px 13px;border-radius:8px;font-family:inherit;cursor:pointer;transition:.15s;
+    white-space:nowrap;font-weight:500;
+  }
+  .actions button:hover{border-color:var(--brand);color:var(--brand);background:#f5f9ff}
+  .actions button.primary{
+    background:linear-gradient(135deg,#4f92ff,#2f7cf6);
+    color:#fff;border-color:transparent;font-weight:600;
+    box-shadow:0 3px 10px rgba(47,124,246,.25);
+  }
+  .actions button.primary:hover{
+    background:linear-gradient(135deg,#3f82ef,#1e63d8);
+    color:#fff;box-shadow:0 4px 14px rgba(47,124,246,.35);
+  }
+  .actions button.primary::after{
+    content:'→';margin-left:5px;font-weight:400;opacity:.85;
+  }
+  .actions .done-tip{font-size:12.5px;color:#a8b2c1;padding:6px 0;display:inline-block;}
+
+  .empty{text-align:center;padding:60px 20px;color:var(--muted)}
+  .empty .ico{font-size:44px;margin-bottom:12px;opacity:.5}
+
+  .lightbox{
+    position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.88);
+    display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;
+  }
+  .lightbox[hidden]{display:none}
+  .lightbox img{max-width:100%;max-height:100%;border-radius:12px}
+
+  .toast{
+    position:fixed;left:50%;bottom:34px;transform:translate(-50%,12px);z-index:1000;
+    background:rgba(31,41,55,.94);color:#fff;font-size:13.5px;padding:11px 20px;
+    border-radius:22px;opacity:0;pointer-events:none;transition:.24s;
+    max-width:80vw;text-align:center;line-height:1.5;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  .share-modal[hidden]{display:none}
+  .share-modal{position:fixed;inset:0;z-index:500;display:flex;align-items:center;
+    justify-content:center;padding:24px}
+  .share-mask{position:absolute;inset:0;background:rgba(15,23,42,.5)}
+  .share-box{
+    position:relative;background:#fff;border-radius:16px;max-width:420px;
+    width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);
+  }
+  .share-box h3{font-size:16px;font-weight:600;margin-bottom:12px}
+  .share-box .preview{
+    background:#f8fafd;border:1px solid var(--line);border-radius:10px;
+    padding:14px;font-size:13.5px;line-height:1.85;color:#374151;
+    white-space:pre-wrap;word-break:break-all;max-height:240px;overflow-y:auto;
+  }
+  .share-box .preview .url{color:#2f7cf6;font-weight:500}
+  .share-box .preview .code-txt{
+    font-family:ui-monospace,Menlo,monospace;font-weight:600;color:#1e63d8;
+  }
+  .share-box .btns{display:flex;gap:10px;margin-top:16px}
+  .share-box .btns button{
+    flex:1;height:44px;border:0;border-radius:10px;font-size:14.5px;font-weight:600;
+    font-family:inherit;cursor:pointer;
+  }
+  .share-box .btns .ok{background:linear-gradient(135deg,#4f92ff,#2f7cf6);color:#fff;
+    box-shadow:0 4px 14px rgba(47,124,246,.3)}
+  .share-box .btns .cancel{background:#fff;color:#4b5563;border:1.5px solid var(--line)}
+
+  /* 改密码弹窗 */
+  .pwd-modal[hidden]{display:none}
+  .pwd-modal{position:fixed;inset:0;z-index:600;display:flex;align-items:center;
+    justify-content:center;padding:24px}
+  .pwd-mask{position:absolute;inset:0;background:rgba(15,23,42,.5)}
+  .pwd-box{
+    position:relative;background:#fff;border-radius:16px;max-width:380px;
+    width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);
+  }
+  .pwd-box h3{font-size:17px;font-weight:600;margin-bottom:6px}
+  .pwd-box .sub{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6}
+  .pwd-box .field{margin-bottom:12px}
+  .pwd-box label{display:block;font-size:12.5px;color:#4b5563;font-weight:500;margin-bottom:6px}
+  .pwd-box input{
+    width:100%;height:44px;border:1.5px solid var(--line);border-radius:10px;
+    padding:0 12px;font-size:15px;font-family:inherit;outline:none;
+    background:#f8fafd;transition:.15s;
+  }
+  .pwd-box input:focus{border-color:var(--brand);background:#fff;
+    box-shadow:0 0 0 3px rgba(47,124,246,.1)}
+  .pwd-box .btns{display:flex;gap:10px;margin-top:18px}
+  .pwd-box .btns button{
+    flex:1;height:44px;border:0;border-radius:10px;font-size:14.5px;font-weight:600;
+    font-family:inherit;cursor:pointer;
+  }
+  .pwd-box .btns .ok{background:linear-gradient(135deg,#4f92ff,#2f7cf6);color:#fff;
+    box-shadow:0 4px 14px rgba(47,124,246,.3)}
+  .pwd-box .btns .cancel{background:#fff;color:#4b5563;border:1.5px solid var(--line)}
+
+  @media (max-width: 820px) {
+    .topbar{padding:12px 14px}
+    .topbar .row{flex-wrap:wrap;gap:8px}
+    .topbar h1{font-size:14px;flex:1 1 100%;order:-1}
+    .topbar button{font-size:12.5px;padding:6px 11px}
+
+    .wrap{padding:12px 12px 0}
+
+    .my-code{padding:16px}
+    .my-code .code-display{font-size:26px;letter-spacing:4px;padding:12px 16px}
+    .my-code .btns button{flex:1;font-size:13px;padding:0 12px}
+
+    .stat-row{grid-template-columns:repeat(3,1fr);gap:8px}
+    .stat{padding:10px 12px}
+    .stat .num{font-size:18px}
+    .stat .lbl{font-size:11.5px}
+
+    .table-wrap{background:transparent;box-shadow:none;border-radius:0;overflow:visible}
+    table, thead, tbody, th, td, tr{display:block}
+    thead{display:none}
+
+    tbody tr{
+      background:#fff;border-radius:14px;margin-bottom:12px;padding:14px;
+      box-shadow:0 2px 10px rgba(23,43,77,.06);
+    }
+    tbody tr:hover{background:#fff}
+    tbody td{border-bottom:0;padding:0;font-size:13.5px}
+    tbody td + td{margin-top:12px;padding-top:12px;border-top:1px dashed #f0f3f9}
+    tbody td[data-label]::before{
+      content: attr(data-label);display:block;font-size:11.5px;
+      color:#8b95a7;font-weight:500;margin-bottom:6px;
+    }
+    .ord-no{font-size:12px}
+    .addr,.remark{max-width:none}
+    .thumbs{gap:8px;margin-bottom:10px}
+    .thumbs img{width:72px;height:72px;border-radius:10px}
+    .sign-thumb{height:48px;padding:3px 6px}
+
+    .actions{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
+      gap:8px;min-width:0;
+    }
+    .actions button{font-size:13.5px;padding:11px 12px;border-radius:10px;text-align:center}
+    .actions button.primary::after{content:'';margin-left:0}
+    .actions .done-tip{padding:10px 0;text-align:center;font-size:13px}
+
+    .share-modal,.pwd-modal{padding:0;align-items:flex-end}
+    .share-box,.pwd-box{
+      max-width:none;width:100%;border-radius:20px 20px 0 0;
+      padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+      max-height:88vh;display:flex;flex-direction:column;
+    }
+    .share-box .preview{max-height:none;flex:1;overflow-y:auto;font-size:13px}
+    .share-box .btns button,.pwd-box .btns button{height:48px;font-size:15px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>工作台 · <span class="name">{{ engineer.name }}</span></h1>
+    <button type="button" id="changePwdBtn">修改密码</button>
+    <form method="post" action="{{ url_for('engineer_logout') }}" style="display:inline">
+      <button type="submit">退出</button>
+    </form>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- 我的服务码 -->
+  <div class="my-code">
+    <h2>🎟 我的服务码 · 发给客户用</h2>
+    <div class="code-display" id="myServiceCode"
+         data-code="{{ engineer.service_code or '' }}">
+      {{ engineer.service_code or '未设置' }}
+    </div>
+    <div class="tip">
+      客户在登录页填入这串码，订单就会自动归到你名下。<br>
+      把下面的链接或二维码发给客户，他点开填个手机号就能预约。
+    </div>
+    <div class="btns">
+      <button type="button" class="white" id="copyCodeBtn">复制服务码</button>
+      <button type="button" class="ghost" id="shareBtn">生成分享文案</button>
+    </div>
+  </div>
+
+  <!-- 订单统计 -->
+  <div class="stat-row">
+    <div class="stat s0">
+      <div class="num">{{ counts['待接单'] }}</div>
+      <div class="lbl">待接单</div>
+    </div>
+    <div class="stat s1">
+      <div class="num">{{ counts['已接单'] }}</div>
+      <div class="lbl">已接单</div>
+    </div>
+    <div class="stat s2">
+      <div class="num">{{ counts['服务中'] }}</div>
+      <div class="lbl">服务中</div>
+    </div>
+    <div class="stat s3">
+      <div class="num">{{ counts['已完成'] }}</div>
+      <div class="lbl">已完成</div>
+    </div>
+    <div class="stat s4">
+      <div class="num">{{ counts['已取消'] }}</div>
+      <div class="lbl">已取消</div>
+    </div>
+  </div>
+
+  {# ============ 按钮文案映射：状态 → 动作 ============ #}
+  {% set ACTION_LABEL = {
+    '已接单': '接单',
+    '服务中': '开始服务',
+    '已完成': '完成服务',
+    '已取消': '取消订单',
+    '待接单': '恢复待接单'
+  } %}
+
+  {% if orders %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>订单 / 状态</th>
+          <th>服务</th>
+          <th>预约时间</th>
+          <th>地址 / 电话</th>
+          <th>凭证（照片 + 签名）</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for o in orders %}
+        <tr data-id="{{ o['id'] }}">
+          <td data-label="订单号">
+            <div class="ord-no">{{ o['order_no'] }}</div>
+            <span class="badge s{{ all_status.index(o['status']) if o['status'] in all_status else 0 }}">
+              {{ o['status'] }}
+            </span>
+            <div style="font-size:11.5px;color:#a8b2c1;margin-top:5px">{{ o['created_at'] }}</div>
+          </td>
+          <td data-label="服务">
+            <div class="svc">
+              {{ o['service_type'] }}
+              {% if o['clean_object'] %}<span class="obj">· {{ o['clean_object'] }}</span>{% endif %}
+            </div>
+            {% if o['remark'] %}<div class="remark">{{ o['remark'] }}</div>{% endif %}
+          </td>
+          <td data-label="预约时间">
+            <div style="font-weight:500">{{ o['book_date'] }}</div>
+            {% if o['time_slot'] %}
+            <span class="time-slot">{{ o['time_slot'] }}</span>
+            {% endif %}
+          </td>
+          <td data-label="地址 / 电话">
+            <div class="addr">{{ o['address'] }}</div>
+            <div class="phone" style="margin-top:5px">{{ o['contact_phone'] }}</div>
+          </td>
+          <td data-label="凭证（照片 + 签名）">
+            <div class="thumbs">
+              {% if o['photo1'] %}
+              <img src="{{ url_for('uploaded_file', filename=o['photo1']) }}"
+                   alt="照片1" onclick="zoom(this.src)">
+              {% endif %}
+              {% if o['photo2'] %}
+              <img src="{{ url_for('uploaded_file', filename=o['photo2']) }}"
+                   alt="照片2" onclick="zoom(this.src)">
+              {% endif %}
+            </div>
+            {% if o['photo_gap'] %}
+            <span class="gap-badge">间隔 {{ o['photo_gap'] }}s</span>
+            {% endif %}
+            {% if o['signature'] %}
+            <div style="margin-top:8px;">
+              <div style="font-size:11.5px;color:#a8b2c1;margin-bottom:3px;">本人签名</div>
+              <img class="sign-thumb"
+                   src="{{ url_for('uploaded_file', filename=o['signature']) }}"
+                   alt="签名" onclick="zoom(this.src)">
+            </div>
+            {% endif %}
+          </td>
+          <td data-label="操作">
+            <div class="actions">
+              {% set ns = next_state.get(o['status'], []) %}
+              {% if ns %}
+                {% for s in ns %}
+                <button type="button"
+                        data-id="{{ o['id'] }}"
+                        data-status="{{ s }}"
+                        data-current="{{ o['status'] }}"
+                        class="{{ 'primary' if s != '已取消' else '' }}">
+                  {{ ACTION_LABEL.get(s, s) }}
+                </button>
+                {% endfor %}
+              {% else %}
+                <span class="done-tip">订单已结束</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-wrap">
+    <div class="empty">
+      <div>还没有订单<br>把你的服务码发给客户，他们下单后就会出现在这里</div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- 分享预览弹窗 -->
+<div class="share-modal" id="shareModal" hidden>
+  <div class="share-mask" id="shareMask"></div>
+  <div class="share-box">
+    <h3>分享文案预览</h3>
+    <div class="preview" id="sharePreview"></div>
+    <div class="btns">
+      <button class="cancel" id="shareCancel" type="button">取消</button>
+      <button class="ok" id="shareCopy" type="button">复制并关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 修改密码弹窗 -->
+<div class="pwd-modal" id="pwdModal" hidden>
+  <div class="pwd-mask" id="pwdMask"></div>
+  <div class="pwd-box">
+    <h3>修改密码</h3>
+    <div class="sub">修改后下次登录请使用新密码</div>
+    <div class="field">
+      <label for="oldPwd">原密码</label>
+      <input type="password" id="oldPwd" maxlength="50" placeholder="请输入当前密码"
+             autocomplete="current-password">
+    </div>
+    <div class="field">
+      <label for="newPwd">新密码</label>
+      <input type="password" id="newPwd" maxlength="50" placeholder="至少 4 位，建议 6 位以上"
+             autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label for="newPwd2">确认新密码</label>
+      <input type="password" id="newPwd2" maxlength="50" placeholder="请再输一次"
+             autocomplete="new-password">
+    </div>
+    <div class="btns">
+      <button class="cancel" id="pwdCancel" type="button">取消</button>
+      <button class="ok" id="pwdOk" type="button">确定修改</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" hidden onclick="this.hidden=true">
+  <img id="lightboxImg" alt="照片大图">
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2400);
+  }
+
+  /* ============ 同步复制（手机端稳） ============ */
+  function copyTextSync(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;width:2em;height:2em;'
+                     + 'padding:0;border:none;outline:none;'
+                     + 'background:transparent;opacity:0;z-index:-1;';
+    document.body.appendChild(ta);
+
+    var ok = false;
+    try {
+      if (/ipad|iphone|ipod/i.test(navigator.userAgent)) {
+        var range = document.createRange();
+        range.selectNodeContents(ta);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        ta.setSelectionRange(0, 999999);
+      } else {
+        ta.focus();
+        ta.select();
+      }
+      ok = document.execCommand('copy');
+    } catch (e) { ok = false; }
+
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  function selectAllInElement(el) {
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(el);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (e) {}
+  }
+
+  window.zoom = function (src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').hidden = false;
+  };
+
+  var codeEl = document.getElementById('myServiceCode');
+  var myCode = codeEl.dataset.code;
+
+  /* ============ 点击大码复制 ============ */
+  codeEl.addEventListener('click', function () {
+    if (!myCode) return;
+    var ok = copyTextSync(myCode);
+    if (ok) {
+      codeEl.classList.add('copied');
+      toast('已复制：' + myCode);
+      setTimeout(function () { codeEl.classList.remove('copied'); }, 900);
+    } else {
+      toast('复制失败，请长按选中后手动复制');
+    }
+  });
+
+  /* ============ 复制服务码按钮 ============ */
+  document.getElementById('copyCodeBtn').addEventListener('click', function () {
+    if (!myCode) { toast('还没有服务码'); return; }
+    var ok = copyTextSync(myCode);
+    toast(ok ? '已复制服务码' : '复制失败，请长按选中后手动复制');
+  });
+
+  /* ============ 分享文案 ============ */
+  function buildShareText() {
+    var url = window.location.origin + '/login?code=' + encodeURIComponent(myCode);
+    var lines = [];
+    lines.push('【家电清洗上门服务】');
+    lines.push('');
+    lines.push('点开下方链接，填手机号即可预约：');
+    lines.push(url);
+    lines.push('');
+    lines.push('我的服务码：' + myCode);
+    lines.push('（点链接会自动带入，也可手动输入）');
+    lines.push('');
+    lines.push('服务范围：油烟机 / 冰箱 / 空调 / 洗衣机 / 热水器 / 太阳能 / 水管清洗');
+    return lines.join('\n');
+  }
+
+  var shareModal = document.getElementById('shareModal');
+  var sharePreview = document.getElementById('sharePreview');
+  var shareText = '';
+
+  document.getElementById('shareBtn').addEventListener('click', function () {
+    if (!myCode) { toast('还没有服务码'); return; }
+    shareText = buildShareText();
+    var safe = shareText
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    safe = safe.replace(/(https?:\/\/[^\s]+)/g, '<span class="url">$1</span>');
+    safe = safe.replace(/服务码：([A-Z0-9]+)/g, '服务码：<span class="code-txt">$1</span>');
+    sharePreview.innerHTML = safe;
+    shareModal.hidden = false;
+  });
+
+  document.getElementById('shareMask').addEventListener('click',
+    function () { shareModal.hidden = true; });
+  document.getElementById('shareCancel').addEventListener('click',
+    function () { shareModal.hidden = true; });
+
+  /* ============ 分享复制（三层兜底，全程同步） ============ */
+  document.getElementById('shareCopy').addEventListener('click', function () {
+    var ok = copyTextSync(shareText);
+    if (ok) {
+      toast('✅ 已复制，去微信粘贴发送');
+      shareModal.hidden = true;
+      return;
+    }
+
+    if (navigator.share) {
+      navigator.share({
+        title: '家电清洗上门服务',
+        text: shareText
+      }).then(function () {
+        shareModal.hidden = true;
+      }).catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        selectAllInElement(sharePreview);
+        toast('已选中文字，长按选择"复制"');
+      });
+      return;
+    }
+
+    selectAllInElement(sharePreview);
+    toast('已选中文字，长按选择"复制"');
+  });
+
+  /* ============ 修改密码 ============ */
+  var pwdModal = document.getElementById('pwdModal');
+  var oldPwdEl = document.getElementById('oldPwd');
+  var newPwdEl = document.getElementById('newPwd');
+  var newPwd2El = document.getElementById('newPwd2');
+
+  function openPwdModal() {
+    oldPwdEl.value = '';
+    newPwdEl.value = '';
+    newPwd2El.value = '';
+    pwdModal.hidden = false;
+    setTimeout(function () { oldPwdEl.focus(); }, 50);
+  }
+  function closePwdModal() { pwdModal.hidden = true; }
+
+  document.getElementById('changePwdBtn').addEventListener('click', openPwdModal);
+  document.getElementById('pwdMask').addEventListener('click', closePwdModal);
+  document.getElementById('pwdCancel').addEventListener('click', closePwdModal);
+
+  document.getElementById('pwdOk').addEventListener('click', async function () {
+    var oldPwd = oldPwdEl.value.trim();
+    var newPwd = newPwdEl.value.trim();
+    var newPwd2 = newPwd2El.value.trim();
+
+    if (!oldPwd) { toast('请输入原密码'); oldPwdEl.focus(); return; }
+    if (!newPwd) { toast('请输入新密码'); newPwdEl.focus(); return; }
+    if (newPwd.length < 4) { toast('新密码至少 4 位'); newPwdEl.focus(); return; }
+    if (newPwd !== newPwd2) { toast('两次输入的新密码不一致'); newPwd2El.focus(); return; }
+    if (oldPwd === newPwd) { toast('新密码不能与原密码相同'); newPwdEl.focus(); return; }
+
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = '提交中…';
+
+    try {
+      var res = await fetch('/engineer/api/change_password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ old_password: oldPwd, new_password: newPwd })
+      });
+      var d = await res.json();
+      if (d.ok) {
+        toast('✅ 密码已修改，下次请用新密码登录');
+        closePwdModal();
+      } else {
+        toast(d.msg || '修改失败');
+      }
+    } catch (e) {
+      toast('网络异常');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '确定修改';
+    }
+  });
+
+  /* ============ 订单状态操作 ============ */
+  document.querySelectorAll('.actions button[data-status]').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      var id = btn.dataset.id;
+      var status = btn.dataset.status;
+      var current = btn.dataset.current || '';
+      var actionText = btn.textContent.trim();
+
+      // 二次确认：把"从什么变成什么"说清楚
+      var confirmMsg = current
+        ? '确定把订单从「' + current + '」改为「' + status + '」吗？\n（' + actionText + '）'
+        : '确定执行「' + actionText + '」吗？';
+      if (!confirm(confirmMsg)) return;
+
+      btn.disabled = true;
+      try {
+        var res = await fetch('/engineer/api/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: Number(id), status: status })
+        });
+        var d = await res.json();
+        if (d.ok) {
+          toast('✅ 已' + actionText + '，当前状态：' + status);
+          setTimeout(function () { location.reload(); }, 700);
+        } else {
+          toast(d.msg || '操作失败');
+          btn.disabled = false;
+        }
+      } catch (e) {
+        toast('网络异常');
+        btn.disabled = false;
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

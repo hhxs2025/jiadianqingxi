@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>管理员登录-家电清洗服务</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    background:linear-gradient(165deg,#1e3a5f 0%,#2f7cf6 100%);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .box{
+    width:100%;max-width:360px;background:#fff;border-radius:18px;
+    padding:32px 24px;box-shadow:0 20px 50px rgba(0,0,0,.25);
+  }
+  h1{font-size:19px;font-weight:600;text-align:center;margin-bottom:6px;color:#1f2937}
+  .sub{font-size:13px;color:#8b95a7;text-align:center;margin-bottom:24px}
+  input{
+    width:100%;height:48px;border:1.5px solid #e8ecf4;border-radius:12px;
+    padding:0 14px;font-size:16px;font-family:inherit;outline:none;transition:.18s;
+    background:#f8fafd;
+  }
+  input:focus{border-color:#2f7cf6;background:#fff;box-shadow:0 0 0 3px rgba(47,124,246,.12)}
+  button{
+    width:100%;height:48px;margin-top:16px;border:0;border-radius:12px;
+    background:linear-gradient(135deg,#4f92ff,#2f7cf6);color:#fff;
+    font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;
+    box-shadow:0 6px 18px rgba(47,124,246,.3);
+  }
+  button:active{transform:translateY(1px)}
+  .err{
+    background:#fdecec;color:#e5484d;font-size:13px;padding:10px 12px;
+    border-radius:10px;margin-bottom:14px;text-align:center;
+  }
+  .tip{margin-top:18px;font-size:12px;color:#a8b2c1;text-align:center;line-height:1.7}
+  code{background:#f0f3f9;padding:2px 6px;border-radius:4px;font-size:11.5px;color:#4b5563}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>管理后台</h1>
+  <div class="sub">家电清洗服务预约系统</div>
+
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+
+  <form method="post">
+    <input type="password" name="password" placeholder="请输入管理密码"
+           autocomplete="current-password" autofocus>
+    <button type="submit">进入后台</button>
+  </form>
+
+  <div class="tip">
+    默认密码 <code>admin123</code><br>
+    生产环境请用环境变量 <code>ADMIN_PASSWORD</code> 覆盖
+  </div>
+</div>
+</body>
+</html>

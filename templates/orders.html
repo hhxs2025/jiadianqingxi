@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>我的预约-家电清洗服务</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --brand:#2f7cf6;--text:#1f2937;--muted:#8b95a7;--line:#e8ecf4;
+    --ok:#0f9d58;--radius:16px;
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    background:#f4f6fb;color:var(--text);font-size:15px;padding-bottom:40px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .topbar{
+    position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#4f92ff,#2f7cf6);
+    color:#fff;padding:16px 18px 20px;border-radius:0 0 22px 22px;
+    box-shadow:0 6px 20px rgba(47,124,246,.24);
+  }
+  .topbar .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .topbar h1{font-size:18px;font-weight:600}
+  .topbar .links{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .topbar .links a{
+    color:#fff;font-size:13px;text-decoration:none;background:rgba(255,255,255,.18);
+    padding:7px 13px;border-radius:20px;white-space:nowrap;transition:.15s;
+  }
+  .topbar .links a:hover{background:rgba(255,255,255,.3)}
+  .topbar .links a.mini{
+    padding:7px 10px;font-size:12.5px;background:rgba(255,255,255,.12);
+  }
+  .topbar .sub{font-size:12px;opacity:.9;margin-top:6px}
+  .wrap{max-width:640px;margin:0 auto;padding:16px 14px 0}
+  .notice{
+    background:#e9f8f0;color:#0f9d58;border-radius:12px;padding:12px 14px;
+    font-size:13.5px;line-height:1.6;margin-bottom:14px;font-weight:500;
+    display:flex;align-items:center;gap:8px;
+  }
+  .notice[hidden]{display:none}
+  .order{
+    background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:14px;
+    box-shadow:0 4px 16px rgba(23,43,77,.06);
+  }
+  .order-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding-bottom:12px;border-bottom:1px dashed var(--line);margin-bottom:12px;
+  }
+  .order-no{font-size:13px;color:var(--muted);font-family:ui-monospace,Menlo,monospace}
+  .status{
+    font-size:12px;padding:4px 11px;border-radius:20px;font-weight:500;
+    background:#fff7e6;color:#b45309;white-space:nowrap;
+  }
+  .status.done{background:#e9f8f0;color:var(--ok)}
+  .status.doing{background:#eef4ff;color:#1e63d8}
+  .service{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .service .ico{
+    width:42px;height:42px;border-radius:12px;flex:0 0 42px;
+    background:#eef4ff;display:flex;align-items:center;justify-content:center;font-size:20px;
+  }
+  .service .name{font-size:16px;font-weight:600}
+  .service .tag{font-size:12px;color:var(--muted);margin-top:3px}
+  .rows{display:flex;flex-direction:column;gap:9px;font-size:14px}
+  .row-item{display:flex;gap:10px;line-height:1.6}
+  .row-item .k{color:var(--muted);flex:0 0 62px;font-size:13.5px}
+  .row-item .v{flex:1;color:#374151;word-break:break-all}
+
+  .photos{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;
+    padding-top:14px;border-top:1px dashed var(--line);
+  }
+  .photos figure{position:relative;border-radius:12px;overflow:hidden;background:#f4f6fa;margin:0}
+  .photos img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+  .photos figcaption{
+    position:absolute;left:0;right:0;bottom:0;padding:6px 9px;
+    background:linear-gradient(transparent,rgba(0,0,0,.72));color:#fff;font-size:11.5px;
+  }
+  .gap-note{
+    font-size:12px;color:var(--ok);margin-top:10px;text-align:center;font-weight:500;
+  }
+
+  .sign-show{
+    margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);
+    display:flex;align-items:center;gap:14px;
+  }
+  .sign-show .label{font-size:12px;color:var(--muted);flex:0 0 auto;}
+  .sign-show img{
+    height:60px;background:#fafbfe;border:1px solid var(--line);
+    border-radius:8px;padding:4px;
+  }
+
+  .empty{text-align:center;padding:70px 20px;color:var(--muted)}
+  .empty .ico{font-size:52px;margin-bottom:14px;opacity:.6}
+  .empty p{font-size:14px;line-height:1.7;margin-bottom:20px}
+  .empty a{
+    display:inline-block;background:linear-gradient(135deg,#4f92ff,#2f7cf6);color:#fff;
+    text-decoration:none;padding:13px 34px;border-radius:12px;font-size:15px;font-weight:600;
+    box-shadow:0 6px 18px rgba(47,124,246,.3);
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>我的预约</h1>
+    <div class="links">
+      <a href="/booking">去预约</a>
+      <a href="/admin/login" class="mini" title="商家后台">🛠 商家</a>
+    </div>
+  </div>
+  <div class="sub">共 {{ orders|length }} 条预约记录</div>
+</div>
+
+<div class="wrap">
+
+  <div class="notice" id="newNotice" {% if not new_order %}hidden{% endif %}>
+    ✅ 预约提交成功，单号 {{ new_order }}
+  </div>
+
+  {% if orders %}
+    {% for o in orders %}
+    <div class="order">
+      <div class="order-head">
+        <span class="order-no">{{ o['order_no'] }}</span>
+        <span class="status
+          {%- if o['status'] == '已完成' %} done
+          {%- elif o['status'] == '服务中' %} doing{% endif %}">{{ o['status'] }}</span>
+      </div>
+
+      <div class="service">
+        <div class="ico">{{ '🧺' if o['service_type'] == '家电清洗' else '🚿' }}</div>
+        <div>
+          <div class="name">
+            {{ o['service_type'] }}{% if o['clean_object'] %} · {{ o['clean_object'] }}{% endif %}
+          </div>
+          <div class="tag">预约上门日期：{{ o['book_date'] }}</div>
+        </div>
+      </div>
+
+      <div class="rows">
+        <div class="row-item">
+          <span class="k">地　址</span>
+          <span class="v">{{ o['address'] }}</span>
+        </div>
+        <div class="row-item">
+          <span class="k">联系电话</span>
+          <span class="v">{{ o['contact_phone'] }}</span>
+        </div>
+        {% if o['remark'] %}
+        <div class="row-item">
+          <span class="k">备　注</span>
+          <span class="v">{{ o['remark'] }}</span>
+        </div>
+        {% endif %}
+        <div class="row-item">
+          <span class="k">提交时间</span>
+          <span class="v">{{ o['created_at'] }}</span>
+        </div>
+      </div>
+
+      {% if o['photo1'] and o['photo2'] %}
+      <div class="photos">
+        <figure>
+          <img src="{{ url_for('uploaded_file', filename=o['photo1']) }}" alt="运行照片 1">
+          <figcaption>照片 1</figcaption>
+        </figure>
+        <figure>
+          <img src="{{ url_for('uploaded_file', filename=o['photo2']) }}" alt="运行照片 2">
+          <figcaption>照片 2</figcaption>
+        </figure>
+      </div>
+      <div class="gap-note">
+        两张照片时间跨度 {{ o['photo_gap'] }} 秒（≥ 180 秒，校验通过）
+      </div>
+      {% endif %}
+
+      {% if o['signature'] %}
+      <div class="sign-show">
+        <span class="label">本人签名</span>
+        <img src="{{ url_for('uploaded_file', filename=o['signature']) }}" alt="手写签名">
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty">
+      <div class="ico">📋</div>
+      <p>你还没有预约记录<br>现在下单，师傅上门清洗</p>
+      <a href="/booking">立即预约</a>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  var n = document.getElementById('newNotice');
+  if (n && !n.hidden) {
+    setTimeout(function () { n.hidden = true; }, 6000);
+    if (history.replaceState) history.replaceState(null, '', '/orders');
+  }
+</script>
+</body>
+</html>
