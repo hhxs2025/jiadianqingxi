@@ -1,4 +1,6 @@
-# 家电清洗服务预约系统
+# 家电清洗服务预约系统  
+[![My GitHub stats](https://github-readme-stats.vercel.app/api?username=hhxs2025&show_icons=true&theme=dracula&hide_border=true&title_color=79ff97&text_color=ffffff)](https://github.com/anuraghazra/github-readme-stats)
+
 
 **版本：v1.0.3**
 
